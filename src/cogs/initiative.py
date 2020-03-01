@@ -1,16 +1,18 @@
 """This is a cog for a discord.py bot.
 It will add some dice rolling commands to a bot.
 """
+#pylint: disable=E0402
 
+import json
 from discord import Embed
 from discord.ext import commands
-
-#pylint: disable=E1101
+from .utils.diceengine import DiceEngine
 
 
 class Initiative(commands.Cog, name='Initiative'):
     def __init__(self, client):
         self.client = client
+        self.engine = DiceEngine()
         self.initiatives = dict()
         self.last_initiative_message = None
 
@@ -36,19 +38,29 @@ class Initiative(commands.Cog, name='Initiative'):
         await ctx.message.delete()
         self.last_initiative_message = None
 
-
     @commands.command(
         name='addi',
         aliases=['ai'],
         # hidden=True
     )
-    async def add_init(self, ctx, value: int, *, name:str = None):
+    async def add_init(self, ctx, value: str = None, *, name: str = None):
         """Add to the initiative list `!addi [value] [name]`"""
+        if value is None:
+            user_id = str(ctx.author.id)
+            with open('../aliases.json') as f:
+                aliases = json.load(f)[user_id]
+            for alias_name in ('init', 'initiative', 'Init', 'Initiative'):
+                if alias_name in aliases:
+                    value = aliases[alias_name].split(' ')[0]
+        try:
+            total, _, _ = self.engine(value)
+        except ValueError:
+            return
         if name is None:
             name = ctx.author.display_name
         if name in self.initiatives:
             del self.initiatives[name]
-        self.initiatives[name] = value
+        self.initiatives[name] = total
         await self.print_initiative(ctx)
 
     @commands.command(
@@ -56,7 +68,7 @@ class Initiative(commands.Cog, name='Initiative'):
         aliases=['di'],
         # hidden=True
     )
-    async def del_init(self, ctx, *, name: str=None):
+    async def del_init(self, ctx, *, name: str = None):
         """Delete from the initiative list `!deli [name]`"""
         if name is None:
             await self.clear_initiative(ctx)
