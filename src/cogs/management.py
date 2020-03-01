@@ -2,15 +2,10 @@
 It will add some management commands to a bot.
 
 Commands:
-    version         show the hash of the latest commit
     load            load an extension / cog
     unload          unload an extension / cog
     reload          reload an extension / cog
     cogs            show currently active extensions / cogs
-    list            make felix compute a list
-     └duplicates        find duplicate usernames
-
-    pull            pull latest changes from github (superuser only)
     error           print the traceback of the last unhandled error to chat
 """
 import json
@@ -62,7 +57,7 @@ class Management(commands.Cog, name='Management'):
             await ctx.send(
                 f'Missing parameter: `{missing}{missing_type}`' +
                 f'\nIf you are not sure how to use the command, try running ' +
-                f'`felix help {ctx.command.qualified_name}`'
+                f'`!help {ctx.command.qualified_name}`'
             )
             return
 
@@ -123,7 +118,7 @@ class Management(commands.Cog, name='Management'):
     @commands.command(
         name='load',
         brief='Load bot extension',
-        description='Load bot extension\n\nExample: felix load cogs.stats',
+        description='Load bot extension\n\nExample: !load cogs.stats',
         hidden=True,
     )
     async def load_extension(self, ctx, extension_name):
@@ -145,7 +140,7 @@ class Management(commands.Cog, name='Management'):
     @commands.command(
         name='unload',
         brief='Unload bot extension',
-        description='Unload bot extension\n\nExample: felix unload cogs.stats',
+        description='Unload bot extension\n\nExample: !unload cogs.stats',
         hidden=True,
     )
     async def unload_extension(self, ctx, extension_name):
@@ -156,7 +151,7 @@ class Management(commands.Cog, name='Management'):
         if target_extension.lower() in 'cogs.management':
             await ctx.send(
                 f"```diff\n- {target_extension} can't be unloaded" +
-                f"\n+ try felix reload {target_extension}!```"
+                f"\n+ try !reload {target_extension}!```"
             )
             return
         if self.client.extensions.get(target_extension) is None:
@@ -170,7 +165,7 @@ class Management(commands.Cog, name='Management'):
     @commands.command(
         name='reload',
         brief='Reload bot extension',
-        description='Reload bot extension\n\nExample: felix reload cogs.stats',
+        description='Reload bot extension\n\nExample: !reload cogs.stats',
         hidden=True,
         aliases=['re']
     )
@@ -260,6 +255,9 @@ class Management(commands.Cog, name='Management'):
         else:
             self.client.last_errors.pop(n)
             await ctx.send(f'Deleted error #{n}')
+        await self.client.change_presence(
+            activity=Activity(name='with dice', type=0)
+        )
 
     @error.command(
         name='traceback',

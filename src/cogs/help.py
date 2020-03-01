@@ -100,9 +100,6 @@ class myHelpCommand(HelpCommand):
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
         if not filtered:
-            await self.context.send(
-                'No public commands in this cog. Try again with felix helpall.'
-            )
             return
         category = f'▼ {cog.qualified_name}'
         entries = '\n'.join(
@@ -116,9 +113,6 @@ class myHelpCommand(HelpCommand):
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         if not filtered:
-            await self.context.send(
-                'No public commands in group. Try again with felix helpall.'
-            )
             return
         category = f'**{group.name}** - {group.description or group.short_doc}'
         entries = '\n'.join(

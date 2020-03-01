@@ -1,4 +1,5 @@
-"""
+"""This is a cog for a discord.py bot.
+It will add some dice rolling commands to a bot.
 """
 
 import json
