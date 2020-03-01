@@ -78,16 +78,18 @@ class Dice(commands.Cog, name='Configure aliases'):
                 total, rolls, static = self.engine(d_command)
             except ValueError as error:
                 return
-            rolls_str = ('(' + ' + '.join(map(str, rolls)) + ')') if rolls else ''
+            rolls_str = (
+                '(' + ' + '.join(map(str, rolls)) + ')') if rolls else ''
             rolls_str = rolls_str.replace('-', '- ')
             if static and rolls:
                 static_str = ' + ' + str(static).replace('-', '- ')
             else:
                 static_str = ''
             e = Embed(
-                description = '*' + d_command + (f' ({command})*' if command else '*') +
+                description='*' + d_command + (f' ({command})*' if command else '*') +
                 ('\n' if rolls_str else '') +
-                (rolls_str + static_str).replace('+ -', '-') + f' = **{total}**',
+                (rolls_str + static_str).replace('+ -', '-') +
+                f' = **{total}**',
             )
             e.set_footer(
                 text=ctx.author.display_name,
@@ -97,7 +99,6 @@ class Dice(commands.Cog, name='Configure aliases'):
             if user_id not in self.messages:
                 self.messages[user_id] = deque()
             self.messages[user_id].append(msg)
-            print(self.messages)
             await ctx.message.delete()
 
     @commands.command(

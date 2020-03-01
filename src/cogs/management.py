@@ -99,7 +99,7 @@ class Management(commands.Cog, name='Management'):
     def crawl_cogs(self, directory='cogs'):
         cogs = []
         for element in listdir(directory):
-            if element == 'samples':
+            if element in ('samples', 'utils'):
                 continue
             abs_el = path.join(directory, element)
             if path.isdir(abs_el):

@@ -1,4 +1,4 @@
-"""Dicey Discord Bot
+"""DiceBot Discord Bot
 
 """
 import json
@@ -9,7 +9,7 @@ from discord import DMChannel
 # from aiohttp import ClientSession
 
 
-class Dicey(Bot):
+class DiceBot(Bot):
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
         self.session = None
@@ -25,9 +25,9 @@ class Dicey(Bot):
         # await self.session.close()
         await super().close()
 
-client = Dicey(
+client = DiceBot(
     command_prefix=('!'),
-    description='Hi I am Dicey!',
+    description='Hi I am DiceBot!',
     max_messages=15000
 )
 
@@ -51,7 +51,7 @@ for extension in reversed(STARTUP_EXTENSIONS):
 async def on_ready():
     print('\nActive in these guilds/servers:')
     [print(g.name) for g in client.guilds]
-    print('Dicey started successfully')
+    print('DiceBot started successfully')
     return True
 
 
@@ -63,4 +63,4 @@ async def on_message(msg):
 
 
 client.run()
-print('Dicey has exited')
+print('DiceBot has exited')

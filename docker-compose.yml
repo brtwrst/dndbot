@@ -8,3 +8,4 @@ services:
             - ./:/opt/dicebot
         command: bash -c 'cd /opt/dicebot/src && python3 -u bot.py'
         restart: always
+        network_mode: bridge
