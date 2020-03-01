@@ -13,20 +13,38 @@ class DiceEngine():
     def __init__(self):
         pass
 
+    @staticmethod
+    def split(arg: str):
+        splits = []
+        if arg[0] not in '+-':
+            arg = '+' + arg
+        current = []
+        for c in arg:
+            if c in '+-' and current:
+                splits.append(''.join(current))
+                current = [c]
+            else:
+                current.append(c)
+        res = splits + [''.join(current)]
+        return res
+
     def __call__(self, arg):
         arg = arg.lower()
-        if any(x not in 'd+0123456789' for x in arg):
+        if any(x not in 'd+-0123456789' for x in arg):
             raise ValueError('invalid dice-roll string ' + arg)
         static = 0
         rolls = []
-        for group in arg.split('+'):
+        for group in self.split(arg):
+            mul = int(group[0] + '1')
+            group = group[1:]
             if not 'd' in group:
-                static += int(group)
+                static += int(group) * mul
                 continue
             num_dice, dice_type = group.split('d')
             num_dice = 1 if not num_dice else int(num_dice)
             dice_type = int(dice_type)
-            [rolls.append(randint(1, dice_type)) for _ in range(num_dice)]
+            [rolls.append(randint(1, dice_type) * mul)
+             for _ in range(num_dice)]
         return (static + sum(rolls), rolls, static)
 
 
@@ -57,12 +75,16 @@ class Dice(commands.Cog, name='Configure aliases'):
                 total, rolls, static = self.engine(d_command)
             except ValueError as error:
                 return
+            rolls_str = '(' + ' + '.join(map(str, rolls)) + ')'
+            rolls_str = rolls_str.replace('-', '- ')
+            if static:
+                static_str = ' + ' + str(static).replace('-', '- ')
+            else:
+                static_str = ''
             e = Embed(
-                description=
-                    f'*({" + ".join(map(str, rolls))})' +
-                    (f' + {static}* ' if static else '* ') +
-                    f'= **{total}**\n'
-                    '*' + d_command + (f' ({command})*' if command else '*'),
+                description= (rolls_str + static_str).replace('+ -', '-') +
+                f' = **{total}**\n' +
+                '*' + d_command + (f' ({command})*' if command else '*'),
             )
             e.set_footer(
                 text=ctx.author.display_name,
@@ -74,17 +96,23 @@ class Dice(commands.Cog, name='Configure aliases'):
     @commands.command(
         name='alias',
         aliases=['a'],
+        hidden=True
     )
-    async def alias(self, ctx, alias_name: str, *, alias_text):
+    async def alias(self, ctx, alias_name: str, *, alias_text=None):
         """You can create an alias by typing `!a [alias name] [alias command]`.
         Examples:
          - `!a init d20+2 Initiative`
          - `!a bh 4d6 Burning Hands`
 
-        You can us an alias by typing `![alias name]`
+        You can use an alias by typing `![alias name]`
         Examples:
          - `!init`
          - `!bh`
+
+        You can delete an alias by typing `!a [alias name]` without a command.
+        Examples:
+         - `!a init`
+         - `!a bh`
 
         You can list your current aliases by typing `!list` or `!l`
 
@@ -105,6 +133,7 @@ class Dice(commands.Cog, name='Configure aliases'):
     @commands.command(
         name='list',
         aliases=['l'],
+        hidden=True
     )
     async def list(self, ctx):
         """List your aliases.
