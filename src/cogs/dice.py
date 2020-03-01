@@ -4,6 +4,7 @@ It will add some dice rolling commands to a bot.
 
 import json
 from random import randint
+from collections import deque
 from discord.ext import commands
 from discord import Embed
 
@@ -55,6 +56,7 @@ class Dice(commands.Cog, name='Configure aliases'):
         with open('../aliases.json') as f:
             self.aliases = json.load(f)
         self.engine = DiceEngine()
+        self.messages = dict()
 
     def save_players(self):
         with open('../aliases.json', 'w') as f:
@@ -63,8 +65,8 @@ class Dice(commands.Cog, name='Configure aliases'):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
-            player = str(ctx.author.id)
-            aliases = self.aliases[player]
+            user_id = str(ctx.author.id)
+            aliases = self.aliases[user_id]
             command = ctx.message.content[1:]
             if command in aliases:
                 command = aliases[command]
@@ -91,7 +93,11 @@ class Dice(commands.Cog, name='Configure aliases'):
                 text=ctx.author.display_name,
                 icon_url=ctx.author.avatar_url
             )
-            await ctx.send(embed=e)
+            msg = await ctx.send(embed=e)
+            if user_id not in self.messages:
+                self.messages[user_id] = deque()
+            self.messages[user_id].append(msg)
+            print(self.messages)
             await ctx.message.delete()
 
     @commands.command(
@@ -155,6 +161,22 @@ class Dice(commands.Cog, name='Configure aliases'):
         )
         msg = await ctx.send(embed=e)
         await msg.add_reaction('❌')
+        await ctx.message.delete()
+
+    @commands.command(
+        name='delete',
+        aliases=['del'],
+        hidden=True
+    )
+    async def delete_msg(self, ctx):
+        """Delete the last bot message caused by the caller"""
+        user_id = str(ctx.author.id)
+        if user_id in self.messages:
+            msg_stack = self.messages[user_id]
+            msg = msg_stack.pop()
+            await msg.delete()
+            if not msg_stack:
+                del self.messages[user_id]
         await ctx.message.delete()
 
     @commands.Cog.listener()

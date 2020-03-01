@@ -92,6 +92,8 @@ class myHelpCommand(HelpCommand):
 
             You can list your current aliases by typing `!list` or `!l`
 
+            You can delete the last bot message you generated with `!del`
+
             Aliases are saved on a per user basis.
             """
         )
