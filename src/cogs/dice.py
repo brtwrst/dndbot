@@ -76,16 +76,16 @@ class Dice(commands.Cog, name='Configure aliases'):
                 total, rolls, static = self.engine(d_command)
             except ValueError as error:
                 return
-            rolls_str = '(' + ' + '.join(map(str, rolls)) + ')'
+            rolls_str = ('(' + ' + '.join(map(str, rolls)) + ')') if rolls else ''
             rolls_str = rolls_str.replace('-', '- ')
-            if static:
+            if static and rolls:
                 static_str = ' + ' + str(static).replace('-', '- ')
             else:
                 static_str = ''
             e = Embed(
-                description= (rolls_str + static_str).replace('+ -', '-') +
-                f' = **{total}**\n' +
-                '*' + d_command + (f' ({command})*' if command else '*'),
+                description = '*' + d_command + (f' ({command})*' if command else '*') +
+                ('\n' if rolls_str else '') +
+                (rolls_str + static_str).replace('+ -', '-') + f' = **{total}**',
             )
             e.set_footer(
                 text=ctx.author.display_name,
