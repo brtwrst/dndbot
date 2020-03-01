@@ -308,6 +308,18 @@ class Management(commands.Cog, name='Management'):
         response.append('```')
         await ctx.send('\n'.join(response))
 
+    # ----------------------------------------------
+    # Function to stop the bot
+    # ----------------------------------------------
+    @commands.command(
+        name='stop',
+        aliases=['restart'],
+        hidden=True
+    )
+    async def stop_bot(self, ctx):
+        """Stop and restart the bot"""
+        await self.client.close()
+
 
 def setup(client):
     client.add_cog(Management(client))

@@ -6,5 +6,5 @@ services:
         build: .
         volumes:
             - ./:/opt/dicebot
-        command: bash -c 'cd /opt/dicebot/src && python3 bot.py'
+        command: bash -c 'cd /opt/dicebot/src && python3 -u bot.py'
         restart: always

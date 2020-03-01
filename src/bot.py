@@ -22,7 +22,7 @@ class Dicey(Bot):
         await super().start(self.config["bot_key"], *args, **kwargs)
 
     async def close(self):
-        await self.session.close()
+        # await self.session.close()
         await super().close()
 
 client = Dicey(
