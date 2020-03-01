@@ -1,0 +1,10 @@
+version: '2'
+services:
+    dicebot:
+        container_name: dicebot
+        image: dicebot
+        build: .
+        volumes:
+            - ./:/opt/dicebot
+        command: bash -c 'cd /opt/dicebot/src && python3 bot.py'
+        restart: always

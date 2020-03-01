@@ -1,0 +1,4 @@
+.vscode
+*.json
+venv
+__pycache__
