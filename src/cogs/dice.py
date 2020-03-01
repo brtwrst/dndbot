@@ -128,15 +128,17 @@ class Dice(commands.Cog, name='Configure aliases'):
         aliases=['del'],
         hidden=True
     )
-    async def delete_msg(self, ctx):
-        """Delete the last bot message caused by the caller"""
+    async def delete_msg(self, ctx, num:int=1):
+        """Delete the last [num] bot messages caused by the caller"""
         user_id = str(ctx.author.id)
         if user_id in self.messages:
             msg_stack = self.messages[user_id]
-            msg = msg_stack.pop()
-            await msg.delete()
-            if not msg_stack:
-                del self.messages[user_id]
+            for _ in range(num):
+                msg = msg_stack.pop()
+                await msg.delete()
+                if not msg_stack:
+                    del self.messages[user_id]
+                    break
         await ctx.message.delete()
 
     @commands.Cog.listener()
