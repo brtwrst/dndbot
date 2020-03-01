@@ -75,20 +75,15 @@ class myHelpCommand(HelpCommand):
         desc = (
             """Roll dice by writing `!xdx+x [Description]`
              - `!d20+2 Initiative`
-             - `!4d6 Burning Hands`
-             - `!2d10+1d6 Eldritch Blast + Hex`
 
             Create an alias by typing `!a [alias name] [alias command]`.
              - `!a init d20+2 Initiative`
-             - `!a bh 4d6 Burning Hands`
 
             Use an alias by typing `![alias name]`
              - `!init`
-             - `!bh`
 
             Delete an alias by typing `!a [alias name]` without a command.
              - `!a init`
-             - `!a bh`
 
             You can list your current aliases by typing `!list` or `!l`
 
