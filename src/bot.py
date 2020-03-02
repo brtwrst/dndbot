@@ -6,6 +6,7 @@ from datetime import datetime
 from os import path, listdir
 from discord.ext.commands import Bot
 from discord import DMChannel
+from cogs.utils.diceengine import DiceEngine
 # from aiohttp import ClientSession
 
 
@@ -16,6 +17,7 @@ class DiceBot(Bot):
         with open('../config.json') as conffile:
             self.config = json.load(conffile)
         self.last_errors = []
+        self.dice_engine = DiceEngine()
 
     async def start(self, *args, **kwargs):
         # self.session = ClientSession()

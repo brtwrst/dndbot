@@ -6,7 +6,6 @@ import json
 from collections import deque
 from discord.ext import commands
 from discord import Embed
-from .utils.diceengine import DiceEngine
 
 
 class Dice(commands.Cog, name='Configure aliases'):
@@ -14,7 +13,7 @@ class Dice(commands.Cog, name='Configure aliases'):
         self.client = client
         with open('../aliases.json') as f:
             self.aliases = json.load(f)
-        self.engine = DiceEngine()
+        self.engine = self.client.dice_engine
         self.messages = dict()
 
     def save_players(self):
@@ -34,9 +33,29 @@ class Dice(commands.Cog, name='Configure aliases'):
             d_command = command.pop(0)
             command = ' '.join(command)
             try:
-                total, rolls, static = self.engine(d_command)
+                result = self.engine(d_command)
             except ValueError:
                 return
+
+            total = result.total
+            rolls = result.rolls
+            static = result.static
+            success = result.success
+            crithit = result.crithit
+            critmiss = result.critmiss
+
+            if success is None:
+                title = None
+                if crithit:
+                    color = 0x00ff00
+                elif critmiss:
+                    color = 0xff0000
+                else:
+                    color = 0x000000
+            else:
+                title = 'Success' if success else 'Failiure'
+                color = 0x00ff00 if success else 0xff0000
+
             rolls_str = (
                 '(' + ' + '.join(map(str, rolls)) + ')') if rolls else ''
             rolls_str = rolls_str.replace('-', '- ')
@@ -45,10 +64,12 @@ class Dice(commands.Cog, name='Configure aliases'):
             else:
                 static_str = ''
             e = Embed(
+                title=title,
                 description='*' + d_command + (f' ({command})*' if command else '*') +
                 ('\n' if rolls_str else '') +
                 (rolls_str + static_str).replace('+ -', '-') +
                 f' = **{total}**',
+                color=color,
             )
             e.set_footer(
                 text=ctx.author.display_name,
@@ -128,7 +149,7 @@ class Dice(commands.Cog, name='Configure aliases'):
         aliases=['del'],
         hidden=True
     )
-    async def delete_msg(self, ctx, num:int=1):
+    async def delete_msg(self, ctx, num: int = 1):
         """Delete the last [num] bot messages caused by the caller"""
         user_id = str(ctx.author.id)
         if user_id in self.messages:

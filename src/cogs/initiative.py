@@ -6,13 +6,12 @@ It will add some dice rolling commands to a bot.
 import json
 from discord import Embed
 from discord.ext import commands
-from .utils.diceengine import DiceEngine
 
 
 class Initiative(commands.Cog, name='Initiative'):
     def __init__(self, client):
         self.client = client
-        self.engine = DiceEngine()
+        self.engine = self.client.dice_engine
         self.initiatives = dict()
         self.last_initiative_message = None
 
@@ -53,9 +52,12 @@ class Initiative(commands.Cog, name='Initiative'):
                 if alias_name in aliases:
                     value = aliases[alias_name].split(' ')[0]
         try:
-            total, _, _ = self.engine(value)
+            result = self.engine(value)
         except ValueError:
             return
+
+        total = result.total
+
         if name is None:
             name = ctx.author.display_name
         if name in self.initiatives:
