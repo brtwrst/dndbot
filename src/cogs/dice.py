@@ -18,7 +18,7 @@ class Dice(commands.Cog, name='Configure aliases'):
 
     def save_players(self):
         with open('../aliases.json', 'w') as f:
-            json.dump(self.aliases, f)
+            json.dump(self.aliases, f, indent=1)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -107,7 +107,9 @@ class Dice(commands.Cog, name='Configure aliases'):
         Aliases are saved on a per user basis."""
         user_id = str(ctx.author.id)
         if user_id not in self.aliases:
-            self.aliases[user_id] = {}
+            self.aliases[user_id] = {
+                'death': 'd10=10 death save'
+                }
         if not alias_text:
             if alias_name in self.aliases[user_id]:
                 del self.aliases[user_id][alias_name]
@@ -115,7 +117,7 @@ class Dice(commands.Cog, name='Configure aliases'):
         else:
             self.aliases[user_id][alias_name] = alias_text
             # await ctx.send('Alias saved')
-            self.save_players()
+        self.save_players()
         await ctx.message.delete()
 
     @commands.command(
