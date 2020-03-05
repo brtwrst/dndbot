@@ -1,11 +1,11 @@
 version: '2'
 services:
-    dicebot:
-        container_name: dicebot
-        image: dicebot
+    dndbot:
+        container_name: dndbot
+        image: dndbot
         build: .
         volumes:
-            - ./:/opt/dicebot
-        command: bash -c 'cd /opt/dicebot/src && python3 -u bot.py'
+            - ./:/opt/dndbot
+        command: bash -c 'cd /opt/dndbot/src && python3 -u bot.py'
         restart: always
         network_mode: bridge

@@ -26,7 +26,7 @@ class myHelpCommand(HelpCommand):
         destination = self.get_destination()
         embed = Embed(
             description=desc,
-            color=0x2ECC71
+            color=0x000000
         )
         if header:
             embed.set_author(
@@ -73,30 +73,12 @@ class myHelpCommand(HelpCommand):
                     entries += '\n' if cmds else ''
             self.paginator.append((category, entries))
         desc = (
-            """Roll dice by writing `!xdx+x [Description]`
-             - `!d20+2 Initiative`
-             - `!1d10+d6+4 Eldritch Bolt + Hex`
+            """Roll dice by writing `![roll_string] [Description]`
 
-            Roll against a target by writing `!d20+x=[target]`
-             - `!d20+4=15 Eldritch Bolt agains AC15`
-
-            Create an alias by typing `!a [alias name] [alias command]`.
-             - `!a init d20+2 Initiative`
-
-            Use an alias by typing `![alias name]`
-             - `!init`
-
-            Delete an alias by typing `!a [alias name]` without a command.
-             - `!a init`
-
-            You can list your current aliases by typing `!list` or `!l`
-
-            You can delete the bot messages you generated with `!del`
-
-            Aliases are saved on a per user basis.
+            For more detailed information visit https://github.com/Brtwrst/DNDBot
             """
         )
-        await self.send_pages(header=False, footer=False, desc=desc)
+        await self.send_pages(header=False, footer=True, desc=desc)
 
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)

@@ -1,4 +1,4 @@
-"""DiceBot Discord Bot
+"""DND5e Discord Bot
 
 """
 import json
@@ -10,7 +10,7 @@ from cogs.utils.diceengine import DiceEngine
 # from aiohttp import ClientSession
 
 
-class DiceBot(Bot):
+class DNDBot(Bot):
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
         self.session = None
@@ -36,9 +36,9 @@ class DiceBot(Bot):
         return any(role in permitted_roles for role in user_roles)
 
 
-client = DiceBot(
+client = DNDBot(
     command_prefix=('!'),
-    description='Hi I am DiceBot!',
+    description='Hi I am The Bot of Many Things!',
     max_messages=15000
 )
 
@@ -62,7 +62,7 @@ for extension in reversed(STARTUP_EXTENSIONS):
 async def on_ready():
     print('\nActive in these guilds/servers:')
     [print(g.name) for g in client.guilds]
-    print('DiceBot started successfully')
+    print('DNDBot started successfully')
     return True
 
 
@@ -74,4 +74,4 @@ async def on_message(msg):
 
 
 client.run()
-print('DiceBot has exited')
+print('DNDBot has exited')
