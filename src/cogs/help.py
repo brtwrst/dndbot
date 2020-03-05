@@ -75,7 +75,7 @@ class myHelpCommand(HelpCommand):
         desc = (
             """Roll dice by writing `![roll_string] [Description]`
 
-            For more detailed information visit https://github.com/Brtwrst/DNDBot
+            For more detailed information visit https://github.com/Brtwrst/dndbot
             """
         )
         await self.send_pages(header=False, footer=True, desc=desc)

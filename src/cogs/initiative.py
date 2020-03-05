@@ -38,11 +38,11 @@ class Initiative(commands.Cog, name='Initiative'):
         self.last_initiative_message = None
 
     @commands.command(
-        name='initiative_add',
-        aliases=['inita', 'initadd'],
+        name='inita',
+        aliases=['initadd'],
     )
     async def add_init(self, ctx, value: str = None, *, name: str = None):
-        """Add to the initiative list `!addi [value] [name]`"""
+        """Add to the initiative tracker"""
         if value is None:
             user_id = str(ctx.author.id)
             with open('../aliases.json') as f:
@@ -65,11 +65,11 @@ class Initiative(commands.Cog, name='Initiative'):
         await self.print_initiative(ctx)
 
     @commands.command(
-        name='initiative_delete',
-        aliases=['initd', 'initdel'],
+        name='initd',
+        aliases=['initdel'],
     )
     async def del_init(self, ctx, *, name: str = None):
-        """Delete from the initiative list `!deli [name]`"""
+        """Clear/Delete from the initiative tracker"""
         if name is None:
             await self.clear_initiative(ctx)
             return
@@ -80,11 +80,11 @@ class Initiative(commands.Cog, name='Initiative'):
         await self.print_initiative(ctx)
 
     @commands.command(
-        name='initiative_show',
-        aliases=['inits', 'initsh', 'initshow'],
+        name='inits',
+        aliases=['initsh', 'initshow'],
     )
     async def show_init(self, ctx):
-        """Show the initiative list"""
+        """Show the initiative tracker"""
         await self.print_initiative(ctx)
 
 
