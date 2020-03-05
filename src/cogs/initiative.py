@@ -38,9 +38,8 @@ class Initiative(commands.Cog, name='Initiative'):
         self.last_initiative_message = None
 
     @commands.command(
-        name='addi',
-        aliases=['ai'],
-        # hidden=True
+        name='initiative_add',
+        aliases=['inita', 'initadd'],
     )
     async def add_init(self, ctx, value: str = None, *, name: str = None):
         """Add to the initiative list `!addi [value] [name]`"""
@@ -66,9 +65,8 @@ class Initiative(commands.Cog, name='Initiative'):
         await self.print_initiative(ctx)
 
     @commands.command(
-        name='deli',
-        aliases=['di'],
-        # hidden=True
+        name='initiative_delete',
+        aliases=['initd', 'initdel'],
     )
     async def del_init(self, ctx, *, name: str = None):
         """Delete from the initiative list `!deli [name]`"""
@@ -82,9 +80,8 @@ class Initiative(commands.Cog, name='Initiative'):
         await self.print_initiative(ctx)
 
     @commands.command(
-        name='showi',
-        aliases=['si'],
-        # hidden=True
+        name='initiative_show',
+        aliases=['inits', 'initsh', 'initshow'],
     )
     async def show_init(self, ctx):
         """Show the initiative list"""

@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord import Embed
 
 
-class Dice(commands.Cog, name='Configure aliases'):
+class Dice(commands.Cog, name='Dice'):
     def __init__(self, client):
         self.client = client
         with open('../aliases.json') as f:
@@ -84,32 +84,20 @@ class Dice(commands.Cog, name='Configure aliases'):
     @commands.command(
         name='alias',
         aliases=['a'],
-        hidden=True
     )
     async def alias(self, ctx, alias_name: str, *, alias_text=None):
-        """You can create an alias by typing `!a [alias name] [alias command]`.
+        """Create an alias.
+
         Examples:
          - `!a init d20+2 Initiative`
          - `!a bh 4d6 Burning Hands`
-
-        You can use an alias by typing `![alias name]`
-        Examples:
-         - `!init`
-         - `!bh`
-
-        You can delete an alias by typing `!a [alias name]` without a command.
-        Examples:
-         - `!a init`
-         - `!a bh`
-
-        You can list your current aliases by typing `!list` or `!l`
-
-        Aliases are saved on a per user basis."""
+         - `!a ebh d10+d6+4 Eldritch Bolt + Hex`
+        """
         user_id = str(ctx.author.id)
         if user_id not in self.aliases:
             self.aliases[user_id] = {
                 'death': 'd10=10 death save'
-                }
+            }
         if not alias_text:
             if alias_name in self.aliases[user_id]:
                 del self.aliases[user_id][alias_name]
@@ -123,12 +111,9 @@ class Dice(commands.Cog, name='Configure aliases'):
     @commands.command(
         name='list',
         aliases=['l'],
-        hidden=True
     )
     async def list(self, ctx):
-        """List your aliases.
-
-        You can create aliases by using the `!alias` or `!a` command."""
+        """List your aliases."""
         user_id = str(ctx.author.id)
         if user_id not in self.aliases:
             return
@@ -152,7 +137,7 @@ class Dice(commands.Cog, name='Configure aliases'):
         hidden=True
     )
     async def delete_msg(self, ctx, num: int = 1):
-        """Delete the last [num] bot messages caused by the caller"""
+        """Delete the last [num] dice-roll messages caused by the caller"""
         user_id = str(ctx.author.id)
         if user_id in self.messages:
             msg_stack = self.messages[user_id]

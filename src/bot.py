@@ -27,6 +27,15 @@ class DiceBot(Bot):
         # await self.session.close()
         await super().close()
 
+    def user_is_admin(self, user):
+        try:
+            user_roles = [role.id for role in user.roles]
+        except AttributeError:
+            return False
+        permitted_roles = self.config['admin_roles']
+        return any(role in permitted_roles for role in user_roles)
+
+
 client = DiceBot(
     command_prefix=('!'),
     description='Hi I am DiceBot!',

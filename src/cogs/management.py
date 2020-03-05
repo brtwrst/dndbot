@@ -21,8 +21,8 @@ class Management(commands.Cog, name='Management'):
         self.client = client
         self.reload_config()
 
-    # async def cog_check(self, ctx):
-    #     return self.client.user_is_admin(ctx.author)
+    async def cog_check(self, ctx):
+        return self.client.user_is_admin(ctx.author)
 
     @commands.Cog.listener()
     async def on_ready(self):
