@@ -93,7 +93,7 @@ class Management(commands.Cog, name='Management'):
         )
 
     def reload_config(self):
-        with open("../config.json") as conffile:
+        with open("../state/config.json") as conffile:
             self.client.config = json.load(conffile)
 
     def crawl_cogs(self, directory='cogs'):

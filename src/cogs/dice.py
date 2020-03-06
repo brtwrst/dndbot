@@ -11,13 +11,13 @@ from discord import Embed
 class Dice(commands.Cog, name='Dice'):
     def __init__(self, client):
         self.client = client
-        with open('../aliases.json') as f:
+        with open('../state/aliases.json') as f:
             self.aliases = json.load(f)
         self.engine = self.client.dice_engine
         self.messages = dict()
 
     def save_players(self):
-        with open('../aliases.json', 'w') as f:
+        with open('../state/aliases.json', 'w') as f:
             json.dump(self.aliases, f, indent=1)
 
     @commands.Cog.listener()

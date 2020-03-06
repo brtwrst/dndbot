@@ -14,7 +14,7 @@ class DNDBot(Bot):
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
         self.session = None
-        with open('../config.json') as conffile:
+        with open('../state/config.json') as conffile:
             self.config = json.load(conffile)
         self.last_errors = []
         self.dice_engine = DiceEngine()

@@ -11,11 +11,11 @@ from discord import Embed
 class Items(commands.Cog, name='Items'):
     def __init__(self, client):
         self.client = client
-        with open('../items.json') as f:
+        with open('../state/items.json') as f:
             self.item_prices = json.load(f)
 
     def save_items(self):
-        with open('../items.json', 'w') as f:
+        with open('../state/items.json', 'w') as f:
             json.dump(self.item_prices, f, indent=1)
 
     def find_items(self, query):

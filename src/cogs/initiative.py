@@ -45,7 +45,7 @@ class Initiative(commands.Cog, name='Initiative'):
         """Add to the initiative tracker"""
         if value is None:
             user_id = str(ctx.author.id)
-            with open('../aliases.json') as f:
+            with open('../state/aliases.json') as f:
                 aliases = json.load(f)[user_id]
             for alias_name in ('init', 'initiative', 'Init', 'Initiative'):
                 if alias_name in aliases:
