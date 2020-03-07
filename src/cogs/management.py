@@ -20,6 +20,9 @@ class Management(commands.Cog, name='Management'):
     def __init__(self, client):
         self.client = client
         self.reload_config()
+        self.default_activity = Activity(name='with dice (!help)', type=0)
+        self.startup_error_activity = Activity(name='Startup ERROR', type=3)
+        self.runtime_error_activity = Activity(name='Runtime ERROR', type=3)
 
     async def cog_check(self, ctx):
         return self.client.user_is_admin(ctx.author)
@@ -28,15 +31,8 @@ class Management(commands.Cog, name='Management'):
     async def on_ready(self):
         loaded = self.client.extensions
         unloaded = [x for x in self.crawl_cogs() if x not in loaded]
-        if len(unloaded) > 0:
-            activity_name = 'ERROR in cog'
-            activity_type = 3
-        else:
-            activity_name = f'with dice'
-            activity_type = 0
-        await self.client.change_presence(
-            activity=Activity(name=activity_name, type=activity_type)
-        )
+        activity = self.startup_error_activity if len(unloaded) > 0 else self.default_activity
+        await self.client.change_presence(activity=activity)
 
     # ----------------------------------------------
     # Error handler
@@ -83,9 +79,7 @@ class Management(commands.Cog, name='Management'):
         # so it can be accessed later with the error command
         await ctx.send('Sorry, something went wrong.')
         self.client.last_errors.append((error, datetime.utcnow(), ctx))
-        await self.client.change_presence(
-            activity=Activity(name='ERROR encountered', url=None, type=3)
-        )
+        await self.client.change_presence(activity=self.runtime_error_activity)
 
         print(f'Ignoring exception in command {ctx.command}:')
         traceback.print_exception(
@@ -256,7 +250,7 @@ class Management(commands.Cog, name='Management'):
             self.client.last_errors.pop(n)
             await ctx.send(f'Deleted error #{n}')
         await self.client.change_presence(
-            activity=Activity(name='with dice', type=0)
+            activity=self.default_activity
         )
 
     @error.command(
