@@ -24,7 +24,10 @@ class Dice(commands.Cog, name='Dice'):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             user_id = str(ctx.author.id)
-            aliases = self.aliases[user_id]
+            try:
+                aliases = self.aliases[user_id]
+            except KeyError:
+                aliases = {}
             command = ctx.message.content[1:]
             if command in aliases:
                 command = aliases[command]
