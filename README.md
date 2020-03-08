@@ -6,7 +6,7 @@
 ```
 Examples:
 - `!d20+6 Longsword TO HIT`
-- `!d10+d6+4 Eldritch Bolt + Hex DMG`
+- `!d10+d6+4 Eldritch Blast + Hex DMG`
 
 
 ### Roll dice against target value: 
@@ -14,7 +14,7 @@ Examples:
 ![roll_command]=[target] [description]
 ``` 
 Examples:
-- `!d20+4=15 Eldritch Bolt against AC15`
+- `!d20+4=15 Eldritch Blast against AC15`
 - `!d10=10 Death Save`
 
 ### Roll and keep only a specific number of dice: 
