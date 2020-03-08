@@ -78,8 +78,6 @@ class DiceEngine():
             keep = int(keep)
             if keep < 1:
                 raise ValueError('must keep at least 1 die')
-            if static:
-                raise ValueError('static value not allowed with keep syntax')
             if '-' in arg:
                 raise ValueError('negative rolls not allowed with keep syntax')
             while keep < len(rolls):

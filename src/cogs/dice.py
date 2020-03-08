@@ -73,7 +73,7 @@ class Dice(commands.Cog, name='Dice'):
                 title=title,
                 description='*' + d_command + (f' ({command})*' if command else '*') +
                 ('\n' if rolls_str else '') +
-                (ignored_str + ' ' + rolls_str + static_str).replace('+ -', '-') +
+                ('~~' + ignored_str + '~~ | ' + rolls_str + static_str).replace('+ -', '-') +
                 f' = **{total}** ',
                 color=color,
             )
