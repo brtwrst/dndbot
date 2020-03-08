@@ -17,6 +17,14 @@ Examples:
 - `!d20+4=15 Eldritch Bolt against AC15`
 - `!d10=10 Death Save`
 
+### Roll and keep only a specific number of dice: 
+```
+![roll_command]k[num] [description]
+``` 
+Examples:
+- `!4d6k3 Stat Roll`
+
+
 ## Aliases
 You can create aliases for regularily used roll commands:
 

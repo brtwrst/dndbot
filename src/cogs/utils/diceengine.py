@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class DiceResult:
     total: int
     rolls: list
+    ignored: list
     static: int
     success: bool
     crithit: bool
@@ -33,17 +34,29 @@ class DiceEngine():
         if not arg:
             return
         arg = arg.lower()
-        if any(x not in 'd+-=0123456789' for x in arg):
-            raise ValueError('invalid dice-roll string ' + arg)
+        if any(x not in 'dk+-=0123456789' for x in arg):
+            raise ValueError('invalid character in dice-roll string')
         static = 0
         rolls = []
+        ignored = []
         crithit = False
         critmiss = False
         success = None
-        if '=' in arg:
+
+        target_mode = '=' in arg
+        keep_mode = 'k' in arg
+        if target_mode and keep_mode:
+            raise ValueError('target mode and keep mode cannot be used at the same time')
+
+        if target_mode:
             arg, target = arg.split('=')
         else:
             target = None
+        if keep_mode:
+            arg, keep = arg.split('k')
+        else:
+            keep = None
+
         for group in self.split(arg):
             mul = int(group[0] + '1')
             group = group[1:]
@@ -60,7 +73,20 @@ class DiceEngine():
                 elif 20 in new_rolls:
                     crithit = True
             rolls += new_rolls
+
+        if keep:
+            keep = int(keep)
+            if keep < 1:
+                raise ValueError('must keep at least 1 die')
+            if static:
+                raise ValueError('static value not allowed with keep syntax')
+            if '-' in arg:
+                raise ValueError('negative rolls not allowed with keep syntax')
+            while keep < len(rolls):
+                ignored.append(rolls.pop(rolls.index(min(rolls))))
+
         total = static + sum(rolls)
+
         if target:
             if crithit:
                 success = True
@@ -68,5 +94,5 @@ class DiceEngine():
                 success = False
             else:
                 success = total >= int(target)
-        result = DiceResult(total, rolls, static, success, crithit, critmiss)
+        result = DiceResult(total, rolls, ignored, static, success, crithit, critmiss)
         return result

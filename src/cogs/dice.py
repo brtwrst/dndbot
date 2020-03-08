@@ -37,11 +37,13 @@ class Dice(commands.Cog, name='Dice'):
             command = ' '.join(command)
             try:
                 result = self.engine(d_command)
-            except ValueError:
+            except ValueError as e:
+                await ctx.send(e)
                 return
 
             total = result.total
             rolls = result.rolls
+            ignored = result.ignored
             static = result.static
             success = result.success
             crithit = result.crithit
@@ -59,9 +61,10 @@ class Dice(commands.Cog, name='Dice'):
                 title = 'Success' if success else 'Failiure'
                 color = 0x00ff00 if success else 0xff0000
 
-            rolls_str = (
-                '(' + ' + '.join(map(str, rolls)) + ')') if rolls else ''
+            rolls_str = ('(' + ' + '.join(map(str, rolls)) + ')') if rolls else ''
             rolls_str = rolls_str.replace('-', '- ')
+            ignored_str = ('(' + ', '.join(map(str, ignored)) + ')') if ignored else ''
+
             if static and rolls:
                 static_str = ' + ' + str(static).replace('-', '- ')
             else:
@@ -70,8 +73,8 @@ class Dice(commands.Cog, name='Dice'):
                 title=title,
                 description='*' + d_command + (f' ({command})*' if command else '*') +
                 ('\n' if rolls_str else '') +
-                (rolls_str + static_str).replace('+ -', '-') +
-                f' = **{total}**',
+                (ignored_str + ' ' + rolls_str + static_str).replace('+ -', '-') +
+                f' = **{total}** ',
                 color=color,
             )
             e.set_footer(
