@@ -71,8 +71,10 @@ You can add a player/monster to the initiative tracker.
 Examples:
 - `!inita 18 Player1`
 - `!inita d20+2 Monsters`
+- `!inita d20+2`
 - `!inita`
 
+If you just type `!inita [Value/Roll]` - without a name, the bot will use your name. 
 If you just type `!inita` - without a value and name, the bot will look through your aliases for one with the name `init or initiative` and use it to add you to the tracker. 
 
 ### Clear/Delete from the initiative tracker
@@ -81,7 +83,7 @@ If you just type `!inita` - without a value and name, the bot will look through 
 !initdel [name]  
 !initd   
 ``` 
-If no name is given - the tracker will be cleared.
+If no name is given - the tracker will be completely cleared.
 
 Examples:
 - `!initd`
