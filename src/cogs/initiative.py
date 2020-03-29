@@ -43,13 +43,18 @@ class Initiative(commands.Cog, name='Initiative'):
     )
     async def add_init(self, ctx, value: str = None, *, name: str = None):
         """Add to the initiative tracker"""
-        if value is None:
-            user_id = str(ctx.author.id)
-            with open('../state/aliases.json') as f:
-                aliases = json.load(f)[user_id]
-            for alias_name in ('init', 'initiative', 'Init', 'Initiative'):
-                if alias_name in aliases:
-                    value = aliases[alias_name].split(' ')[0]
+        try:
+            if value is None:
+                user_id = str(ctx.author.id)
+                with open('../state/aliases.json') as f:
+                    aliases = json.load(f)[user_id]
+
+                for alias_name in ('init', 'initiative', 'Init', 'Initiative'):
+                    if alias_name in aliases:
+                        value = aliases[alias_name].split(' ')[0]
+        except KeyError:
+            return
+
         try:
             result = self.engine(value)
         except ValueError:
