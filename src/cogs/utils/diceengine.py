@@ -35,7 +35,7 @@ class DiceEngine():
             return
         arg = arg.lower()
         if any(x not in 'dk+-=0123456789' for x in arg):
-            raise ValueError('invalid character in dice-roll string')
+            raise ValueError(f'Invalid character in dice-roll string: `{arg}`')
         static = 0
         rolls = []
         ignored = []
@@ -46,7 +46,7 @@ class DiceEngine():
         target_mode = '=' in arg
         keep_mode = 'k' in arg
         if target_mode and keep_mode:
-            raise ValueError('target mode and keep mode cannot be used at the same time')
+            raise ValueError('Target mode:`=` and keep mode:`k` cannot be used at the same time')
 
         if target_mode:
             arg, target = arg.split('=')

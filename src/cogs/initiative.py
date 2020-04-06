@@ -39,7 +39,7 @@ class Initiative(commands.Cog, name='Initiative'):
 
     @commands.command(
         name='inita',
-        aliases=['initadd'],
+        aliases=['initadd', 'Inita', 'Initadd'],
     )
     async def add_init(self, ctx, value: str = None, *, name: str = None):
         """Add to the initiative tracker"""
@@ -53,11 +53,13 @@ class Initiative(commands.Cog, name='Initiative'):
                     if alias_name in aliases:
                         value = aliases[alias_name].split(' ')[0]
         except KeyError:
+            await ctx.send('No `init` alias found. Create one by typing `!a init [init_roll]`')
             return
 
         try:
             result = self.engine(value)
-        except ValueError:
+        except ValueError as e:
+            await ctx.send('Error in command `initadd`: ' + str(e))
             return
 
         total = result.total
@@ -71,7 +73,7 @@ class Initiative(commands.Cog, name='Initiative'):
 
     @commands.command(
         name='initd',
-        aliases=['initdel'],
+        aliases=['initdel', 'Initd', 'Initdel'],
     )
     async def del_init(self, ctx, *, name: str = None):
         """Clear/Delete from the initiative tracker"""
@@ -86,7 +88,7 @@ class Initiative(commands.Cog, name='Initiative'):
 
     @commands.command(
         name='inits',
-        aliases=['initsh', 'initshow'],
+        aliases=['initsh', 'initshow', 'Inits', 'Initsh', 'Initshow'],
     )
     async def show_init(self, ctx):
         """Show the initiative tracker"""

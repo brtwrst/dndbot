@@ -38,7 +38,7 @@ class Dice(commands.Cog, name='Dice'):
             try:
                 result = self.engine(d_command)
             except ValueError as e:
-                await ctx.send(e)
+                await ctx.send('Error in command `roll`: ' + str(e))
                 return
 
             total = result.total
@@ -117,7 +117,7 @@ class Dice(commands.Cog, name='Dice'):
 
     @commands.command(
         name='list',
-        aliases=['l'],
+        aliases=['l', 'List', 'L'],
     )
     async def list(self, ctx):
         """List your aliases."""
@@ -140,7 +140,7 @@ class Dice(commands.Cog, name='Dice'):
 
     @commands.command(
         name='delete',
-        aliases=['del'],
+        aliases=['del', 'Delete', 'Del'],
         hidden=True
     )
     async def delete_msg(self, ctx, num: int = 1):
