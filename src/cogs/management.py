@@ -39,6 +39,11 @@ class Management(commands.Cog, name='Management'):
     # ----------------------------------------------
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            # Ignore CommandNotFound errors here.
+            # They are used in dice.py to handle roll commands.
+            return
+
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send(error)
             return
@@ -61,10 +66,6 @@ class Management(commands.Cog, name='Management'):
             await ctx.send('Sorry, you are not allowed to run this command.')
             return
 
-        if isinstance(error, commands.CommandNotFound):
-            # await ctx.send(f'Sorry, command `{ctx.invoked_with}` not found.')
-            return
-
         if isinstance(error, commands.BadArgument):
             # It's in an embed to prevent mentions from working
             embed = Embed(
@@ -77,7 +78,7 @@ class Management(commands.Cog, name='Management'):
 
         # In case of an unhandled error -> Save the error + current datetime
         # so it can be accessed later with the error command
-        await ctx.send('Sorry, something went wrong.')
+        await ctx.send('Sorry, something went wrong. Error saved in error log (!help error)')
         self.client.last_errors.append((error, datetime.utcnow(), ctx))
         await self.client.change_presence(activity=self.runtime_error_activity)
 
