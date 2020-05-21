@@ -148,6 +148,8 @@ class InChar(commands.Cog, name='Commands'):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        if not isinstance(error, commands.CommandNotFound):
+            return
         user_id = str(ctx.author.id)
         char_list = self.chars.get(user_id, None)
         if char_list is None:
