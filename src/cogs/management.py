@@ -20,7 +20,7 @@ class Management(commands.Cog, name='Management'):
     def __init__(self, client):
         self.client = client
         self.reload_config()
-        self.default_activity = Activity(name='with dice (!help)', type=0)
+        self.default_activity = Activity(name='other Characters (+help)', type=0)
         self.startup_error_activity = Activity(name='Startup ERROR', type=3)
         self.runtime_error_activity = Activity(name='Runtime ERROR', type=3)
 
