@@ -5,7 +5,6 @@ import json
 from datetime import datetime
 from os import path, listdir
 from discord.ext.commands import Bot
-from discord import DMChannel
 
 
 class CharBot(Bot):
@@ -61,13 +60,6 @@ async def on_ready():
     [print(g.name) for g in client.guilds]
     print('CharBot started successfully')
     return True
-
-
-@client.event
-async def on_message(msg):
-    if isinstance(msg.channel, DMChannel):
-        return
-    await client.process_commands(msg)
 
 
 client.run()

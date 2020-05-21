@@ -22,10 +22,11 @@ class myHelpCommand(HelpCommand):
         self.paginator = None
         self.spacer = "\u1160 "  # Invisible Unicode Character to indent lines
 
-    async def send_pages(self, header=False, footer=False):
+    async def send_pages(self, header=False, footer=False, desc=None):
         destination = self.get_destination()
         embed = Embed(
-            color=0x2ECC71
+            description=desc,
+            color=0x000000
         )
         if header:
             embed.set_author(
@@ -40,7 +41,7 @@ class myHelpCommand(HelpCommand):
             )
         if footer:
             embed.set_footer(
-                text='Use + help <command/category> for more information.'
+                text='Use +help <command/category> for more information.'
             )
         await destination.send(embed=embed)
 
@@ -71,7 +72,10 @@ class myHelpCommand(HelpCommand):
                     cmds = cmds[8:]
                     entries += '\n' if cmds else ''
             self.paginator.append((category, entries))
-        await self.send_pages(header=True, footer=True)
+        desc = (
+            "Write in character by writing a `+` in front of your message"
+        )
+        await self.send_pages(header=True, footer=True, desc=desc)
 
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
@@ -123,7 +127,8 @@ class Help(commands.Cog):
         self.client.help_command = myHelpCommand(
             command_attrs={
                 'aliases': ['halp'],
-                'help': 'Shows help about the bot, a command, or a category'
+                'help': 'Shows help about the bot, a command, or a category',
+                'hidden': True,
             }
         )
 
@@ -145,7 +150,13 @@ class Help(commands.Cog):
             await ctx.send_help(text)
         else:
             await ctx.send_help()
-        self.client.help_command = myHelpCommand()
+        self.client.help_command = myHelpCommand(
+            command_attrs={
+                'aliases': ['halp'],
+                'help': 'Shows help about the bot, a command, or a category',
+                'hidden': True
+            }
+        )
 
 
 def setup(client):
