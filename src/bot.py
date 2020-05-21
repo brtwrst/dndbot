@@ -6,18 +6,15 @@ from datetime import datetime
 from os import path, listdir
 from discord.ext.commands import Bot
 from discord import DMChannel
-from cogs.utils.diceengine import DiceEngine
-# from aiohttp import ClientSession
 
 
-class DNDBot(Bot):
+class CharBot(Bot):
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
         self.session = None
         with open('../state/config.json') as conffile:
             self.config = json.load(conffile)
         self.last_errors = []
-        self.dice_engine = DiceEngine()
 
     async def start(self, *args, **kwargs):
         # self.session = ClientSession()
@@ -36,9 +33,9 @@ class DNDBot(Bot):
         return any(role in permitted_roles for role in user_roles)
 
 
-client = DNDBot(
-    command_prefix=('!'),
-    description='Hi I am The Bot of Many Things!',
+client = CharBot(
+    command_prefix=('+'),
+    description='Hi I am CharBot!',
     max_messages=15000
 )
 
@@ -62,7 +59,7 @@ for extension in reversed(STARTUP_EXTENSIONS):
 async def on_ready():
     print('\nActive in these guilds/servers:')
     [print(g.name) for g in client.guilds]
-    print('DNDBot started successfully')
+    print('CharBot started successfully')
     return True
 
 
@@ -74,4 +71,4 @@ async def on_message(msg):
 
 
 client.run()
-print('DNDBot has exited')
+print('CharBot has exited')

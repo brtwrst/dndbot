@@ -22,11 +22,10 @@ class myHelpCommand(HelpCommand):
         self.paginator = None
         self.spacer = "\u1160 "  # Invisible Unicode Character to indent lines
 
-    async def send_pages(self, header=False, footer=False, desc=None):
+    async def send_pages(self, header=False, footer=False):
         destination = self.get_destination()
         embed = Embed(
-            description=desc,
-            color=0x000000
+            color=0x2ECC71
         )
         if header:
             embed.set_author(
@@ -41,7 +40,7 @@ class myHelpCommand(HelpCommand):
             )
         if footer:
             embed.set_footer(
-                text='Use !help <command/category> for more information.'
+                text='Use + help <command/category> for more information.'
             )
         await destination.send(embed=embed)
 
@@ -72,17 +71,14 @@ class myHelpCommand(HelpCommand):
                     cmds = cmds[8:]
                     entries += '\n' if cmds else ''
             self.paginator.append((category, entries))
-        desc = (
-            """Roll dice by writing `![roll_string] [Description]`
-
-            For more detailed information visit https://github.com/Brtwrst/dndbot
-            """
-        )
-        await self.send_pages(header=False, footer=True, desc=desc)
+        await self.send_pages(header=True, footer=True)
 
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
         if not filtered:
+            await self.context.send(
+                'No public commands in this cog. Try again with + helpall.'
+            )
             return
         category = f'▼ {cog.qualified_name}'
         entries = '\n'.join(
@@ -96,6 +92,9 @@ class myHelpCommand(HelpCommand):
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         if not filtered:
+            await self.context.send(
+                'No public commands in group. Try again with + helpall.'
+            )
             return
         category = f'**{group.name}** - {group.description or group.short_doc}'
         entries = '\n'.join(
@@ -124,12 +123,15 @@ class Help(commands.Cog):
         self.client.help_command = myHelpCommand(
             command_attrs={
                 'aliases': ['halp'],
-                'help': 'Shows this message',
-                'hidden': True
-            },
+                'help': 'Shows help about the bot, a command, or a category'
+            }
         )
 
+    async def cog_check(self, ctx):
+        return self.client.user_is_admin(ctx.author)
+
     def cog_unload(self):
+        self.client.get_command('help').hidden = False
         self.client.help_command = DefaultHelpCommand()
 
     @commands.command(
