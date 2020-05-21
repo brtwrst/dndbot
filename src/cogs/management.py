@@ -30,7 +30,7 @@ class Management(commands.Cog, name='Management'):
     @commands.Cog.listener()
     async def on_ready(self):
         loaded = self.client.extensions
-        unloaded = [x for x in self.crawl_cogs() if x not in loaded]
+        unloaded = [x for x in self.crawl_cogs() if x not in loaded and 'extra.' not in x]
         activity = self.startup_error_activity if len(unloaded) > 0 else self.default_activity
         await self.client.change_presence(activity=activity)
 

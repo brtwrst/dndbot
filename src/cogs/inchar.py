@@ -12,46 +12,47 @@ from discord import Embed, Message
 class InChar(commands.Cog, name='Commands'):
     def __init__(self, client):
         self.client = client
-        with open('../state/chars.json') as f:
-            self.chars = json.load(f)
+        with open('../state/users.json') as f:
+            self.users = json.load(f)
+        self.users = {int(k):v for k,v in self.users.items()}
         self.messages = dict()
 
-    def save_chars(self):
-        with open('../state/chars.json', 'w') as f:
-            json.dump(self.chars, f, indent=1)
+    def save_users(self):
+        with open('../state/users.json', 'w') as f:
+            json.dump(self.users, f, indent=1)
 
     @commands.command(
         name='addchar',
+        aliases=['add']
     )
-    async def addchar(self, ctx, *, charname):
+    async def addchar(self, ctx, charname, pic_url, npc=None):
         """Add a character"""
-        user_id = str(ctx.author.id)
-        char_list = self.chars.get(user_id, dict([('active', charname)]))
-        char_list[charname] = ''
-        self.chars[user_id] = char_list
-        await ctx.send(f'adding {ctx.author.id}_{charname}')
-        self.save_chars()
+        user_id = ctx.author.id
+        user = self.users.get(user_id, {'characters': dict(), 'active': None})
+        user['characters'][charname] = {'picture': pic_url, 'npc':True if npc else False}
+        self.users[user_id] = user
+        await ctx.send(f'{charname} succesfully added!')
+        self.save_users()
 
     @commands.command(
         name='deletechar',
         aliases=['delchar', 'removechar', 'remchar', 'rmchar']
     )
-    async def delete(self, ctx, *, charname):
+    async def delete(self, ctx, charname):
         """Remove a character"""
-        user_id = str(ctx.author.id)
-        char_list = self.chars.get(user_id, None)
-        if char_list is None:
+        user_id = ctx.author.id
+        if user_id not in self.users:
             return
+        user = self.users[user_id]
+        char_list = user['characters']
         if charname not in char_list:
             await ctx.send(f'No character with name {charname} found')
             return
         char_list.pop(charname)
-        if len(char_list) == 1:
-            self.chars.pop(user_id)
-        elif char_list['active'] == charname:
-            char_list['active'] = list(char_list.keys())[-1]
-        await ctx.send(f'removing {ctx.author.id}_{charname}')
-        self.save_chars()
+        if len(char_list) == 0:
+            self.users.pop(user_id)
+        await ctx.send(f'{charname} successfully removed!')
+        self.save_users()
 
 
     @commands.command(
@@ -60,15 +61,18 @@ class InChar(commands.Cog, name='Commands'):
     )
     async def show_chars(self, ctx):
         """Show all your characters"""
-        user_id = str(ctx.author.id)
-        char_list = self.chars.get(user_id, None)
-        if not char_list:
+        user_id = ctx.author.id
+        if user_id not in self.users:
             return
-        active_char = char_list['active']
-        pic_url = char_list[active_char]
-        character_list = '\n'.join(cname for cname in char_list.keys() if cname != 'active')
-        character_list = character_list.replace(active_char, f'**{active_char}**')
-        e = Embed(description=character_list)
+        user = self.users[user_id]
+        char_list = user['characters']
+        active_char = user['active']
+        list_to_print = '\n'.join(cname for cname in char_list.keys())
+        pic_url = ''
+        if active_char:
+            list_to_print = list_to_print.replace(active_char+'\n', f'**{active_char}**\n')
+            pic_url = char_list[active_char]['picture']
+        e = Embed(description=list_to_print)
         e.set_thumbnail(url=pic_url)
         await ctx.send(embed=e)
 
@@ -77,95 +81,75 @@ class InChar(commands.Cog, name='Commands'):
         name='char',
         aliases=['active', 'activechar']
     )
-    async def char(self, ctx, *, charname):
+    async def char(self, ctx, charname=None):
         """Select active character"""
-        user_id = str(ctx.author.id)
-        char_list = self.chars.get(user_id, None)
-        if char_list is None:
+        user_id = ctx.author.id
+        if user_id not in self.users:
             return
-        if charname not in char_list:
+        user = self.users[user_id]
+        char_list = user['characters']
+        if charname not in char_list and charname is not None:
             await ctx.send(f'No character with name {charname} found')
-            return
-        char_list['active'] = charname
-        self.save_chars()
-        await self.show_chars(ctx)
+        user['active'] = charname
+        await ctx.send(f'Active character: {charname}')
+        self.save_users()
 
+
+    # @commands.command(
+    #     name='deletemessage',
+    #     aliases=['del', 'delete', 'deletemsg', 'delmsg']
+    # )
+    # async def delete_message(self, ctx, msg:Message):
+    #     """Delete one of your "In Character" messages"""
+    #     if msg.author.id != self.client.user.id:
+    #         return
+    #     message_id = str(msg.id)
+    #     if message_id not in self.messages:
+    #         return
+    #     requester = str(ctx.author.id)
+    #     original_author = self.messages[message_id]
+    #     if not requester == original_author:
+    #         return
+    #     self.messages.pop(message_id)
+    #     await msg.delete()
+    #     await ctx.message.delete()
 
     @commands.command(
-        name='addpic',
-        aliases=['addpicture', 'pic']
+        name='+',
     )
-    async def addpic(self, ctx, *, charname):
-        """Add a picture for a character"""
-        user_id = str(ctx.author.id)
-        char_list = self.chars.get(user_id, None)
-        if char_list is None:
+    async def write_in_character(self, ctx, charname, *, user_input=''):
+        """Write a message as a specific character"""
+        user_id = ctx.author.id
+        if user_id not in self.users:
             return
-        if charname not in char_list:
-            await ctx.send(f'No character with name {charname} found')
-            return
-        await ctx.send('Please provide the URL of the picture')
-        try:
-            def check(m):
-                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-            pic_url_message = await self.client.wait_for(
-                'message',
-                check=check,
-                timeout=120
-            )
-        except asyncio.TimeoutError:
-            await ctx.send(f'addpic timed out - please run the command again')
-            return
-        pic_url = pic_url_message.content
-        parse_result = urlparse(pic_url)
-        if not parse_result.scheme and not parse_result.netloc:
-            await ctx.send('Sorry this does not look like a valid URL')
-            return
-        char_list[charname] = pic_url
-        self.save_chars()
-        await ctx.send(f'picture stored for {ctx.author.id}_{charname}')
+        user = self.users[user_id]
+        char_list = user['characters']
+        selected_char = None
+        for character_name in char_list.keys():
+            if character_name.lower().startswith(charname.lower()):
+                selected_char = character_name
+                break
+        if selected_char is None:
+            if user['active'] is None:
+                return
+            selected_char = user['active']
+            user_input = charname + ' ' + user_input
 
-
-    @commands.command(
-        name='deletemessage',
-        aliases=['del', 'delete', 'deletemsg', 'delmsg']
-    )
-    async def delete_message(self, ctx, msg:Message):
-        """Delete one of your "In Character" messages"""
-        if msg.author.id != self.client.user.id:
-            return
-        message_id = str(msg.id)
-        if message_id not in self.messages:
-            return
-        requester = str(ctx.author.id)
-        original_author = self.messages[message_id]
-        if not requester == original_author:
-            return
-        self.messages.pop(message_id)
-        await msg.delete()
-        await ctx.message.delete()
-
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if not isinstance(error, commands.CommandNotFound):
-            return
-        user_id = str(ctx.author.id)
-        char_list = self.chars.get(user_id, None)
-        if char_list is None:
-            return
-        active_char = char_list['active']
-        message_text = ctx.message.content[1:]
-        pic_url = char_list[active_char]
-        e = Embed(title=f'{active_char}:', description=message_text)
+        pic_url = char_list[selected_char]['picture']
+        e = Embed(
+            title=f'{selected_char}:',
+            description=user_input,
+            color=ctx.author.color
+        )
         e.set_thumbnail(url=pic_url)
         e.set_footer(
-            text=ctx.author.display_name,
-            icon_url=ctx.author.avatar_url
+            text='@' + ctx.author.name#+'#'+ctx.author.discriminator,
+            # icon_url=ctx.author.avatar_url
         )
         msg = await ctx.send(embed=e)
-        self.messages[str(msg.id)] = user_id
+        self.messages[msg.id] = user_id
         await ctx.message.delete()
+
 
 def setup(client):
     client.add_cog(InChar(client))
