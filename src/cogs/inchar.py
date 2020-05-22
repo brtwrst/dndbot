@@ -56,7 +56,7 @@ class InChar(commands.Cog, name='Commands'):
 
     @commands.command(
         name='list',
-        aliases=['listchars', 'showchars', 'show']
+        aliases=['listchars']
     )
     async def show_chars(self, ctx):
         """Show all your characters"""
@@ -93,6 +93,21 @@ class InChar(commands.Cog, name='Commands'):
         await ctx.send(f'Active character: {charname}')
         self.save_users()
 
+    @commands.command(
+        name='show',
+    )
+    async def show(self, ctx, charname=None):
+        """Select active character"""
+        user_id = ctx.author.id
+        if user_id not in self.users:
+            return
+        user = self.users[user_id]
+        char_list = user['characters']
+        if charname not in char_list and charname is not None:
+            await ctx.send(f'No character with name {charname} found')
+        pic_url = char_list[charname]['picture']
+        npc = char_list[charname]['npc']
+        await ctx.send(f'`+addchar {charname} {pic_url} {"npc" if npc else ""}`')
 
     # @commands.command(
     #     name='deletemessage',
