@@ -3,7 +3,6 @@ It will add commands to speak in character.
 """
 #pylint: disable=E0402
 import json
-import asyncio
 from urllib.parse import urlparse
 from discord.ext import commands
 from discord import Embed, Message
@@ -28,7 +27,7 @@ class InChar(commands.Cog, name='Commands'):
     async def addchar(self, ctx, charname, pic_url, npc=None):
         """Add a character"""
         user_id = ctx.author.id
-        user = self.users.get(user_id, {'characters': dict(), 'active': None})
+        user = self.users.get(user_id, {'characters': dict(), 'active': charname})
         user['characters'][charname] = {'picture': pic_url, 'npc':True if npc else False}
         self.users[user_id] = user
         await ctx.send(f'{charname} succesfully added!')
@@ -70,7 +69,7 @@ class InChar(commands.Cog, name='Commands'):
         list_to_print = '\n'.join(cname for cname in char_list.keys())
         pic_url = ''
         if active_char:
-            list_to_print = list_to_print.replace(active_char+'\n', f'**{active_char}**\n')
+            list_to_print = list_to_print.replace(active_char, f'**{active_char}**', 1)
             pic_url = char_list[active_char]['picture']
         e = Embed(description=list_to_print)
         e.set_thumbnail(url=pic_url)
