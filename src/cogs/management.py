@@ -87,10 +87,11 @@ class Management(commands.Cog, name='Management'):
         self.client.last_errors.append((error, datetime.utcnow(), ctx))
         await self.client.change_presence(activity=self.runtime_error_activity)
 
-        print(f'Ignoring exception in command {ctx.command}:')
+        print(f'Ignoring exception in command {ctx.command}:', flush=True)
         traceback.print_exception(
             type(error), error, error.__traceback__
         )
+        print('-------------------------------------------------------------', flush=True)
 
     def reload_config(self):
         with open("../state/config.json") as conffile:
