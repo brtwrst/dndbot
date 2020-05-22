@@ -7,7 +7,7 @@ from os import path, listdir
 from discord.ext.commands import Bot
 
 
-class CharBot(Bot):
+class Blackwing(Bot):
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
         self.session = None
@@ -24,17 +24,12 @@ class CharBot(Bot):
         await super().close()
 
     def user_is_admin(self, user):
-        try:
-            user_roles = [role.id for role in user.roles]
-        except AttributeError:
-            return False
-        permitted_roles = self.config['admin_roles']
-        return any(role in permitted_roles for role in user_roles)
+        return user.id in self.config['admins']
 
 
-client = CharBot(
+client = Blackwing(
     command_prefix=('+'),
-    description='Hi I am CharBot!',
+    description='Hi I am Blackwing!',
     max_messages=15000
 )
 
@@ -58,9 +53,9 @@ for extension in reversed(STARTUP_EXTENSIONS):
 async def on_ready():
     print('\nActive in these guilds/servers:')
     [print(g.name) for g in client.guilds]
-    print('CharBot started successfully')
+    print('Blackwing started successfully')
     return True
 
 
 client.run()
-print('CharBot has exited')
+print('Blackwing has exited')

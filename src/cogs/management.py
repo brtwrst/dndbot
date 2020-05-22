@@ -64,8 +64,9 @@ class Management(commands.Cog, name='Management'):
 
         if isinstance(error, commands.CheckFailure):
             await ctx.author.send(
-                'Please run all character related commands here! '
-                '(type `+help` for more information)'
+                'You cannot run this command in that channel! '
+                'Please type character related commands here '
+                '(or type `+help` for more information)'
             )
             await ctx.message.delete()
             return
