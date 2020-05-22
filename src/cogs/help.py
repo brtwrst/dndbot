@@ -22,6 +22,15 @@ class myHelpCommand(HelpCommand):
         self.paginator = None
         self.spacer = "\u1160 "  # Invisible Unicode Character to indent lines
 
+    def get_destination(self):
+        """Returns the :class:`~discord.abc.Messageable` where the help command will be output.
+
+        You can override this method to customise the behaviour.
+
+        By default this returns the context's channel.
+        """
+        return self.context.author
+
     async def send_pages(self, header=False, footer=False, desc=None):
         destination = self.get_destination()
         embed = Embed(
@@ -73,7 +82,15 @@ class myHelpCommand(HelpCommand):
                     entries += '\n' if cmds else ''
             self.paginator.append((category, entries))
         desc = (
-            "Write in character by writing a `+` in front of your message"
+            'If your character name includes whitespace, surround it with `"double quotes"`\n'
+            'Create a character by typing `+addchar [name] [picture_url]`\n'
+            'Create an npc by typing `+addchar [name] [picture_url] npc`\n'
+            'Set an active character with `+char [name]`\n'
+            'Write a message with your active character by writing `++ [your_message]`\n'
+            'Write a message with another character by writing `++ [name] [your_message]`\n'
+            'List all your creadet character with `+list`\n'
+            'Show a character\'s configuration with `+show [name]`\n'
+            'Delete a character by typing `+delchar [name]`\n'
         )
         await self.send_pages(header=True, footer=True, desc=desc)
 
