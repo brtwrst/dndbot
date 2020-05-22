@@ -90,7 +90,7 @@ class myHelpCommand(HelpCommand):
             'Set an active character with `+char [name]`\n'
             'Write a message with your active character by writing `++ [your_message]`\n'
             'Write a message with another character by writing `++ [name] [your_message]`\n'
-            'List all your creadet character with `+list`\n'
+            'List all your created character with `+list`\n'
             'Show a character\'s configuration with `+show [name]`\n'
             'Delete a character by typing `+delchar [name]`\n'
         )
