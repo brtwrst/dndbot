@@ -1,11 +1,11 @@
 """This is a cog for a discord.py bot.
 It will add commands to speak in character.
 """
-#pylint: disable=E0402
+#pylint: disable=E0402, E0211
 import json
 from urllib.parse import urlparse
 from discord.ext import commands
-from discord import Embed, Message
+from discord import Embed, Message, DMChannel
 
 
 class InChar(commands.Cog, name='Commands'):
@@ -20,10 +20,16 @@ class InChar(commands.Cog, name='Commands'):
         with open('../state/users.json', 'w') as f:
             json.dump(self.users, f, indent=1)
 
+    def is_dm_chat():
+        async def predicate(ctx):
+             return isinstance(ctx.channel, DMChannel)
+        return commands.check(predicate)
+
     @commands.command(
         name='addchar',
         aliases=['add']
     )
+    @is_dm_chat()
     async def addchar(self, ctx, charname, pic_url, npc=None):
         """Add a character"""
         user_id = ctx.author.id
@@ -37,6 +43,7 @@ class InChar(commands.Cog, name='Commands'):
         name='deletechar',
         aliases=['delchar', 'removechar', 'remchar', 'rmchar']
     )
+    @is_dm_chat()
     async def delete(self, ctx, charname):
         """Remove a character"""
         user_id = ctx.author.id
@@ -58,6 +65,7 @@ class InChar(commands.Cog, name='Commands'):
         name='list',
         aliases=['listchars']
     )
+    @is_dm_chat()
     async def show_chars(self, ctx):
         """Show all your characters"""
         user_id = ctx.author.id
@@ -80,6 +88,7 @@ class InChar(commands.Cog, name='Commands'):
         name='char',
         aliases=['active', 'activechar']
     )
+    @is_dm_chat()
     async def char(self, ctx, charname=None):
         """Select active character"""
         user_id = ctx.author.id
@@ -96,6 +105,7 @@ class InChar(commands.Cog, name='Commands'):
     @commands.command(
         name='show',
     )
+    @is_dm_chat()
     async def show(self, ctx, charname=None):
         """Select active character"""
         user_id = ctx.author.id

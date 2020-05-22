@@ -63,7 +63,8 @@ class Management(commands.Cog, name='Management'):
             return
 
         if isinstance(error, commands.CheckFailure):
-            await ctx.send('Sorry, you are not allowed to run this command.')
+            await ctx.author.send('Please run all character related commands here!')
+            await ctx.message.delete()
             return
 
         if isinstance(error, commands.BadArgument):
