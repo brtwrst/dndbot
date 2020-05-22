@@ -108,6 +108,7 @@ class InChar(commands.Cog, name='Commands'):
         char_list = user['characters']
         if charname not in char_list and charname is not None:
             await ctx.send(f'No character with name {charname} found')
+            return
         user['active'] = charname
         await ctx.send(f'Active character: {charname}')
         self.save_users()
@@ -125,6 +126,7 @@ class InChar(commands.Cog, name='Commands'):
         char_list = user['characters']
         if charname not in char_list and charname is not None:
             await ctx.send(f'No character with name {charname} found')
+            return
         pic_url = char_list[charname]['picture']
         npc = char_list[charname]['npc']
         await ctx.send(f'`+addchar {charname} {pic_url} {"npc" if npc else ""}`')
