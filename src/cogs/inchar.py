@@ -62,6 +62,8 @@ class InChar(commands.Cog, name='Commands'):
         if charname not in char_list:
             await ctx.send(f'No character with name {charname} found')
             return
+        if user['active'] == charname:
+            user['active'] = None
         char_list.pop(charname)
         if len(char_list) == 0:
             self.users.pop(user_id)
