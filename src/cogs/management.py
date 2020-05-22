@@ -63,7 +63,10 @@ class Management(commands.Cog, name='Management'):
             return
 
         if isinstance(error, commands.CheckFailure):
-            await ctx.author.send('Please run all character related commands here!')
+            await ctx.author.send(
+                'Please run all character related commands here! '
+                '(type `+help` for more information)'
+            )
             await ctx.message.delete()
             return
 
