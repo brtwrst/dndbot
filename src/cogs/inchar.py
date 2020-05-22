@@ -32,6 +32,14 @@ class InChar(commands.Cog, name='Commands'):
     @is_dm_chat()
     async def addchar(self, ctx, charname, pic_url, npc=None):
         """Add a character"""
+        valid_filetypes = ('.jpg', '.jpeg', '.png')
+        parsed = urlparse(pic_url)
+        if not parsed.scheme and not parsed.netloc:
+            await ctx.send('Sorry - invalid picture URL')
+            return
+        if not any(parsed.path.lower().endswith(filetype) for filetype in valid_filetypes):
+            await ctx.send('Please only use `' + ' '.join(valid_filetypes) + '`')
+            return
         user_id = ctx.author.id
         user = self.users.get(user_id, {'characters': dict(), 'active': charname})
         user['characters'][charname] = {'picture': pic_url, 'npc':True if npc else False}
@@ -139,7 +147,7 @@ class InChar(commands.Cog, name='Commands'):
     #     await ctx.message.delete()
 
     @commands.command(
-        name='+',
+        name='+'
     )
     async def write_in_character(self, ctx, charname, *, user_input=''):
         """Write a message as a specific character"""
@@ -158,12 +166,18 @@ class InChar(commands.Cog, name='Commands'):
                 return
             selected_char = user['active']
             user_input = charname + ' ' + user_input
-
         pic_url = char_list[selected_char]['picture']
+        guild_ranks = self.client.config['ranks']
+        color = 0x404040
+        if not char_list[selected_char]['npc'] and not isinstance(ctx.channel, DMChannel):
+            user_roles = [role.id for role in ctx.author.roles]
+            for rank in guild_ranks:
+                if rank in user_roles:
+                    color = ctx.guild.get_role(rank).color
         e = Embed(
             title=f'{selected_char}:',
             description=user_input,
-            color=ctx.author.color
+            color=color
         )
         e.set_thumbnail(url=pic_url)
         e.set_footer(
@@ -172,7 +186,8 @@ class InChar(commands.Cog, name='Commands'):
         )
         msg = await ctx.send(embed=e)
         self.messages[msg.id] = user_id
-        await ctx.message.delete()
+        if not isinstance(ctx.channel, DMChannel):
+            await ctx.message.delete()
 
 
 def setup(client):

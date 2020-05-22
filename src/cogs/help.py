@@ -10,7 +10,7 @@ Only users that have an admin role can use the commands.
 """
 
 import itertools
-from discord import Embed
+from discord import Embed, DMChannel
 from discord.ext import commands
 from discord.ext.commands import HelpCommand, DefaultHelpCommand
 
@@ -52,6 +52,8 @@ class myHelpCommand(HelpCommand):
             embed.set_footer(
                 text='Use +help <command/category> for more information.'
             )
+        if not isinstance(self.context.channel, DMChannel):
+            await self.context.message.delete()
         await destination.send(embed=embed)
 
     async def send_bot_help(self, mapping):
@@ -146,7 +148,8 @@ class Help(commands.Cog):
                 'aliases': ['halp'],
                 'help': 'Shows help about the bot, a command, or a category',
                 'hidden': True,
-            }
+            },
+            verify_checks=False
         )
 
     async def cog_check(self, ctx):
@@ -172,7 +175,8 @@ class Help(commands.Cog):
                 'aliases': ['halp'],
                 'help': 'Shows help about the bot, a command, or a category',
                 'hidden': True
-            }
+            },
+            verify_checks=False
         )
 
 
