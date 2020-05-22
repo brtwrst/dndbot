@@ -5,7 +5,7 @@ It will add commands to speak in character.
 import json
 from urllib.parse import urlparse
 from discord.ext import commands
-from discord import Embed, Message, DMChannel
+from discord import Embed, DMChannel
 
 
 class InChar(commands.Cog, name='Commands'):
@@ -128,25 +128,6 @@ class InChar(commands.Cog, name='Commands'):
         pic_url = char_list[charname]['picture']
         npc = char_list[charname]['npc']
         await ctx.send(f'`+addchar {charname} {pic_url} {"npc" if npc else ""}`')
-
-    # @commands.command(
-    #     name='deletemessage',
-    #     aliases=['del', 'delete', 'deletemsg', 'delmsg']
-    # )
-    # async def delete_message(self, ctx, msg:Message):
-    #     """Delete one of your "In Character" messages"""
-    #     if msg.author.id != self.client.user.id:
-    #         return
-    #     message_id = str(msg.id)
-    #     if message_id not in self.messages:
-    #         return
-    #     requester = str(ctx.author.id)
-    #     original_author = self.messages[message_id]
-    #     if not requester == original_author:
-    #         return
-    #     self.messages.pop(message_id)
-    #     await msg.delete()
-    #     await ctx.message.delete()
 
     @commands.command(
         name='+'
