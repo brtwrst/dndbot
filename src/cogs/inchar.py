@@ -82,7 +82,7 @@ class InChar(commands.Cog, name='Commands'):
         user = self.users[user_id]
         char_list = user['characters']
         active_char = user['active']
-        list_to_print = '\n'.join(cname for cname in char_list.keys())
+        list_to_print = '\n'.join(c + ' (NPC)' * char_list[c]['npc'] for c in char_list.keys())
         pic_url = ''
         if active_char:
             list_to_print = list_to_print.replace(active_char, f'**{active_char}**', 1)
