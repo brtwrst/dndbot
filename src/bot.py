@@ -14,6 +14,7 @@ class Blackwing(Bot):
         with open('../state/config.json') as conffile:
             self.config = json.load(conffile)
         self.last_errors = []
+        self.mainguild = None
 
     async def start(self, *args, **kwargs):
         # self.session = ClientSession()
@@ -34,7 +35,6 @@ client = Blackwing(
 )
 
 STARTUP_EXTENSIONS = []
-
 for file in listdir(path.join(path.dirname(__file__), 'cogs/')):
     filename, ext = path.splitext(file)
     if '.py' in ext:
@@ -48,12 +48,12 @@ for extension in reversed(STARTUP_EXTENSIONS):
         exc = f'{type(e).__name__}: {e}'
         print(f'Failed to load extension {extension}\n{exc}')
 
-
 @client.event
 async def on_ready():
     print('\nActive in these guilds/servers:')
     [print(g.name) for g in client.guilds]
     print('Blackwing started successfully')
+    client.mainguild = client.get_guild(client.config['mainguild'])
     return True
 
 

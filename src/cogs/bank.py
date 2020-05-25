@@ -14,10 +14,17 @@ CURRENCIES = ('Copper', 'Silver', 'Electrum', 'Gold', 'Platinum')
 class Bank(commands.Cog, name='Bank'):
     def __init__(self, client):
         self.client = client
-        self.main_guild = self.client.get_guild(525426489366282248)
         with open('../state/bank.json') as f:
             self.transaction_history = json.load(f)
-        self.emoji = {c: get(self.main_guild.emojis, name=c.lower()) for c in CURRENCIES}
+        try:
+            self.emoji = {c: get(self.client.mainguild.emojis, name=c.lower()) for c in CURRENCIES}
+        except (TypeError, AttributeError):
+            self.emoji = None
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.emoji:
+            self.emoji = {c: get(self.client.mainguild.emojis, name=c.lower()) for c in CURRENCIES}
 
     async def cog_check(self, ctx):
         return self.client.user_is_admin(ctx.author)
@@ -45,7 +52,7 @@ class Bank(commands.Cog, name='Bank'):
         coins = {
             c: transaction.get(c, 0) for c in CURRENCIES
         }
-        date = transaction['date'].split('.')[0].replace('T', ' ')
+        date = transaction['date'].split('.')[0].replace('T', ' ') + ' UTC'
         user = transaction['user']
         description = transaction['description']
         title = f'{date} - {user}'

@@ -1,7 +1,7 @@
 """This is a cog for a discord.py bot.
 It will add commands to speak in character.
 """
-#pylint: disable=E0402, E0211
+# pylint: disable=E0402, E0211
 import json
 from urllib.parse import urlparse
 from discord.ext import commands
@@ -13,8 +13,7 @@ class InChar(commands.Cog, name='Commands'):
         self.client = client
         with open('../state/users.json') as f:
             self.users = json.load(f)
-        self.users = {int(k):v for k,v in self.users.items()}
-        self.messages = dict()
+        self.users = {int(k): v for k, v in self.users.items()}
 
     def save_users(self):
         with open('../state/users.json', 'w') as f:
@@ -22,7 +21,7 @@ class InChar(commands.Cog, name='Commands'):
 
     def is_dm_chat():
         async def predicate(ctx):
-             return isinstance(ctx.channel, DMChannel)
+            return isinstance(ctx.channel, DMChannel)
         return commands.check(predicate)
 
     @commands.command(
@@ -42,7 +41,7 @@ class InChar(commands.Cog, name='Commands'):
             return
         user_id = ctx.author.id
         user = self.users.get(user_id, {'characters': dict(), 'active': charname})
-        user['characters'][charname] = {'picture': pic_url, 'npc':True if npc else False}
+        user['characters'][charname] = {'picture': pic_url, 'npc': True if npc else False}
         self.users[user_id] = user
         await ctx.send(f'{charname} succesfully added!')
         self.save_users()
@@ -70,7 +69,6 @@ class InChar(commands.Cog, name='Commands'):
         await ctx.send(f'{charname} successfully removed!')
         self.save_users()
 
-
     @commands.command(
         name='list',
         aliases=['listchars']
@@ -92,7 +90,6 @@ class InChar(commands.Cog, name='Commands'):
         e = Embed(description=list_to_print)
         e.set_thumbnail(url=pic_url)
         await ctx.send(embed=e)
-
 
     @commands.command(
         name='char',
@@ -166,15 +163,13 @@ class InChar(commands.Cog, name='Commands'):
         )
         e.set_thumbnail(url=pic_url)
         e.set_footer(
-            text='@' + ctx.author.name#+'#'+ctx.author.discriminator,
+            text='@' + ctx.author.name  # +'#'+ctx.author.discriminator,
             # icon_url=ctx.author.avatar_url
         )
         msg = await ctx.send(embed=e)
-        self.messages[msg.id] = user_id
         if not isinstance(ctx.channel, DMChannel):
             await ctx.message.delete()
 
 
 def setup(client):
     client.add_cog(InChar(client))
-
