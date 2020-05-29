@@ -85,8 +85,8 @@ class myHelpCommand(HelpCommand):
             self.paginator.append((category, entries))
         desc = (
             'If your character name includes whitespace, surround it with `"double quotes"`\n'
-            'Create a character by typing `+addchar [name] [picture_url]`\n'
-            'Create an npc by typing `+addchar [name] [picture_url] npc`\n'
+            'Create a character by typing `+addchar [name] [displayname] [picture_url]`\n'
+            'Create an npc by typing `+addchar [name] [displayname] [picture_url] npc`\n'
             'Set an active character with `+char [name]`\n'
             'Write a message with your active character by writing `++ [your_message]`\n'
             'Write a message with another character by writing `++ [name] [your_message]`\n'

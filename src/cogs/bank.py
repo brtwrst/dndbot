@@ -1,5 +1,5 @@
 """This is a cog for a discord.py bot.
-It will add commands to speak in character.
+It will add commands to manage a guild bank.
 """
 # pylint: disable=E0402, E0211
 import json

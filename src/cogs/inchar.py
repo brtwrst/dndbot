@@ -29,7 +29,7 @@ class InChar(commands.Cog, name='Commands'):
         aliases=['add']
     )
     @is_dm_chat()
-    async def addchar(self, ctx, charname, pic_url, npc=None):
+    async def addchar(self, ctx, charname, displayname, pic_url, npc=None):
         """Add a character"""
         valid_filetypes = ('.jpg', '.jpeg', '.png')
         parsed = urlparse(pic_url)
@@ -41,7 +41,11 @@ class InChar(commands.Cog, name='Commands'):
             return
         user_id = ctx.author.id
         user = self.users.get(user_id, {'characters': dict(), 'active': charname})
-        user['characters'][charname] = {'picture': pic_url, 'npc': True if npc else False}
+        user['characters'][charname] = {
+            'picture': pic_url,
+            'npc': True if npc else False,
+            'displayname': displayname
+        }
         self.users[user_id] = user
         await ctx.send(f'{charname} succesfully added!')
         self.save_users()
@@ -157,7 +161,7 @@ class InChar(commands.Cog, name='Commands'):
                 if rank in user_roles:
                     color = ctx.guild.get_role(rank).color
         e = Embed(
-            title=f'{selected_char}:',
+            title=f'{char_list[selected_char]["displayname"]}:',
             description=user_input,
             color=color
         )
@@ -166,7 +170,7 @@ class InChar(commands.Cog, name='Commands'):
             text='@' + ctx.author.name  # +'#'+ctx.author.discriminator,
             # icon_url=ctx.author.avatar_url
         )
-        msg = await ctx.send(embed=e)
+        await ctx.send(embed=e)
         if not isinstance(ctx.channel, DMChannel):
             await ctx.message.delete()
 
