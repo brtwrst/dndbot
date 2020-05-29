@@ -58,7 +58,7 @@ class Management(commands.Cog, name='Management'):
             await ctx.send(
                 f'Missing parameter: `{missing}{missing_type}`' +
                 f'\nIf you are not sure how to use the command, try running ' +
-                f'`!help {ctx.command.qualified_name}`'
+                f'`+help {ctx.command.qualified_name}`'
             )
             return
 
@@ -83,7 +83,7 @@ class Management(commands.Cog, name='Management'):
 
         # In case of an unhandled error -> Save the error + current datetime
         # so it can be accessed later with the error command
-        await ctx.send('Sorry, something went wrong. Error saved in error log (!help error)')
+        await ctx.send('Sorry, something went wrong. Error saved in error log (+help error)')
         self.client.last_errors.append((error, datetime.utcnow(), ctx))
         await self.client.change_presence(activity=self.runtime_error_activity)
 
