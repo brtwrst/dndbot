@@ -118,14 +118,14 @@ class InChar(commands.Cog, name='Commands'):
         name='show',
     )
     @is_dm_chat()
-    async def show(self, ctx, charname=None):
+    async def show(self, ctx, charname):
         """Select active character"""
         user_id = ctx.author.id
         if user_id not in self.users:
             return
         user = self.users[user_id]
         char_list = user['characters']
-        if charname not in char_list and charname is not None:
+        if charname not in char_list:
             await ctx.send(f'No character with name {charname} found')
             return
         pic_url = char_list[charname]['picture']

@@ -12,7 +12,7 @@ import json
 import traceback
 from datetime import datetime
 from os import path, listdir
-from discord import Activity, Embed
+from discord import Activity, Embed, GroupChannel
 from discord.ext import commands
 
 
@@ -291,9 +291,10 @@ class Management(commands.Cog, name='Management'):
         )
         response = [f'`Error occured {delta_str}`']
         if error_ctx:
+            is_group = isinstance(error_ctx.channel, GroupChannel)
             response.append(f'`Command: {error_ctx.invoked_with}`')
             response.append(f'`User: {error_ctx.author.name}`')
-            response.append(f'`Channel:{error_ctx.channel.name}`')
+            response.append(f'`Channel:{error_ctx.channel.name if is_group else " DM"}`')
         else:
             response.append('`Error happened outside of command`')
         response.append(f'```python\n')
