@@ -103,14 +103,13 @@ class InChar(commands.Cog, name='Commands'):
         self.users[user_id] = user
         await ctx.send(f'Success')
         self.save_users()
-        await ctx.message.delete()
 
     @commands.command(
         name='alist',
         hidden=True,
     )
     @is_admin()
-    async def admin_show_chars(self, ctx, target_user: Member):
+    async def admin_show_chars(self, ctx, target_user:Member):
         """Show all your characters"""
         user_id = target_user.id
 
