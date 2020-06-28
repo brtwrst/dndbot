@@ -5,7 +5,7 @@ It will add commands to speak in character.
 import json
 from urllib.parse import urlparse
 from discord.ext import commands
-from discord import Embed, DMChannel
+from discord import Embed, DMChannel, Member, Role
 
 
 class InChar(commands.Cog, name='Commands'):
@@ -22,6 +22,11 @@ class InChar(commands.Cog, name='Commands'):
     def is_dm_chat():
         async def predicate(ctx):
             return isinstance(ctx.channel, DMChannel)
+        return commands.check(predicate)
+
+    def is_admin():
+        async def predicate(ctx):
+            return ctx.bot.user_is_admin(ctx.author)
         return commands.check(predicate)
 
     @commands.command(
@@ -71,6 +76,31 @@ class InChar(commands.Cog, name='Commands'):
         if len(char_list) == 0:
             self.users.pop(user_id)
         await ctx.send(f'{charname} successfully removed!')
+        self.save_users()
+
+    @commands.command(
+        name='setrank',
+    )
+    @is_admin()
+    async def setrank(self, ctx, target_user:Member, charname:str, rank:Role=None):
+        """Override a characters rank"""
+
+        user_id = target_user.id
+
+        user = self.users.get(user_id, None)
+        if user is None:
+            raise commands.BadArgument('User does not have any characters')
+
+        if charname not in user['characters']:
+            raise commands.BadArgument('User does not have a character with that name')
+
+        if rank is None:
+            user['characters'][charname].pop('rank_override', None)
+        else:
+            user['characters'][charname]['rank_override'] = rank.id
+
+        self.users[user_id] = user
+        await ctx.send(f'Success')
         self.save_users()
 
     @commands.command(
@@ -155,7 +185,9 @@ class InChar(commands.Cog, name='Commands'):
         pic_url = char_list[selected_char]['picture']
         guild_ranks = self.client.config['ranks']
         color = 0x404040
-        if not char_list[selected_char]['npc'] and not isinstance(ctx.channel, DMChannel):
+        if 'rank_override' in char_list[selected_char]:
+            color = color = ctx.guild.get_role(char_list[selected_char]['rank_override']).color
+        elif not char_list[selected_char]['npc'] and not isinstance(ctx.channel, DMChannel):
             user_roles = [role.id for role in ctx.author.roles]
             for rank in guild_ranks:
                 if rank in user_roles:

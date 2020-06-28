@@ -25,7 +25,12 @@ class Blackwing(Bot):
         await super().close()
 
     def user_is_admin(self, user):
-        return user.id in self.config['admins']
+        try:
+            user_roles = [role.id for role in user.roles]
+        except AttributeError:
+            return False
+        permitted_roles = self.config['admin_roles']
+        return any(role in permitted_roles for role in user_roles)
 
 
 client = Blackwing(
