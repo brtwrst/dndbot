@@ -80,6 +80,7 @@ class InChar(commands.Cog, name='Commands'):
 
     @commands.command(
         name='setrank',
+        hidden=True
     )
     @is_admin()
     async def setrank(self, ctx, target_user:Member, charname:str, rank:Role=None):
@@ -102,10 +103,30 @@ class InChar(commands.Cog, name='Commands'):
         self.users[user_id] = user
         await ctx.send(f'Success')
         self.save_users()
+        await ctx.message.delete()
+
+    @commands.command(
+        name='alist',
+        hidden=True,
+    )
+    @is_admin()
+    async def admin_show_chars(self, ctx, target_user: Member):
+        """Show all your characters"""
+        user_id = target_user.id
+
+        user = self.users.get(user_id, None)
+        if user is None:
+            raise commands.BadArgument('User does not have any characters')
+
+        user = self.users[user_id]
+        char_list = user['characters']
+        to_print = '\n'.join(char_list[c]['displayname'] + ' -> ' + c for c in char_list.keys())
+        e = Embed(description='**Display Name -> name**\n\n' + to_print)
+        await ctx.send(embed=e)
 
     @commands.command(
         name='list',
-        aliases=['listchars']
+        aliases=['listchars'],
     )
     @is_dm_chat()
     async def show_chars(self, ctx):
