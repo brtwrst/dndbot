@@ -212,6 +212,7 @@ class InChar(commands.Cog, name='Commands'):
             for rank in guild_ranks:
                 if rank in user_roles:
                     color = ctx.guild.get_role(rank).color
+                    break
         e = Embed(
             title=f'{char_list[selected_char]["displayname"]}:',
             description=user_input,
