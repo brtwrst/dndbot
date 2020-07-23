@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from os import path, listdir
 from discord.ext.commands import Bot
+from cogs.utils.state_db import State_DB
 
 
 class Blackwing(Bot):
@@ -15,6 +16,7 @@ class Blackwing(Bot):
             self.config = json.load(conffile)
         self.last_errors = []
         self.mainguild = None
+        self.state = State_DB(db_path='sqlite:///../state/state.db.sqlite3')
 
     async def start(self, *args, **kwargs):
         # self.session = ClientSession()
