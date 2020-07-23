@@ -46,6 +46,22 @@ class Character(Base):
     def __repr__(self):
         return f'<Character({self.char_id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank_override=})>'
 
+class Transaction(Base):
+    __tablename__ = 'transactions'
+
+    transaction_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    description = Column(String, nullable=False)
+    date = Column(String, nullable=False)
+    platinum = Column(Integer)
+    electrum = Column(Integer)
+    gold = Column(Integer)
+    silver = Column(Integer)
+    copper = Column(Integer)
+
+    def __repr__(self):
+        return f'<Transaction({self.transaction_id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
+
 
 engine = create_engine('sqlite:///state.db.sqlite3')
 Base.metadata.create_all(engine)
@@ -53,42 +69,64 @@ session_maker = sessionmaker(engine)
 
 if __name__ == '__main__':
     import json
-    with open('users.json') as userfile:
-        user_json = json.load(userfile)
-    users_to_add = []
-    characters_to_add = []
-    for discord_id, userdata in user_json.items():
-        discord_id = int(discord_id)
-        character_data = userdata['characters']
-        for charname, chardata in character_data.items():
-            picture_url = chardata['picture']
-            npc_status = chardata['npc']
-            display_name = chardata['displayname']
-            rank_override = chardata.get('rank_override', None)
-            characters_to_add.append(Character(
-                user_id=discord_id,
-                name=charname,
-                display_name=display_name,
-                picture_url=picture_url,
-                npc_status=npc_status,
-                rank_override=rank_override
-            ))
+    # # Bank
+    # with open('bank.json') as bankfile:
+    #     transactions = json.load(bankfile)
+    # transactions_to_add = []
+    # for transaction in transactions:
+    #     transactions_to_add.append(
+    #         Transaction(
+    #             user_id = transaction.get('user', None),
+    #             description = transaction.get('description', None),
+    #             date = transaction.get('date', None),
+    #             platinum = transaction.get('platinum', None),
+    #             electrum = transaction.get('electrum', None),
+    #             gold = transaction.get('gold', None),
+    #             silver = transaction.get('silver', None),
+    #             copper = transaction.get('copper', None),
+    #         )
+    #     )
+    # with session_manager(session_maker) as session:
+    #     session.add_all(transactions_to_add)
 
-        users_to_add.append(User(
-            discord_id=discord_id,
-            active_char=None
-        ))
-    with session_manager(session_maker) as session:
-        session.add_all(users_to_add)
-        session.add_all(characters_to_add)
 
-    # Set Active Characters
-    for discord_id, userdata in user_json.items():
-        discord_id = int(discord_id)
-        active_char = userdata['active']
-        with session_manager(session_maker) as session:
-            user=session.query(User).filter_by(discord_id=discord_id).first()
-            char_id = session.query(Character.char_id).filter_by(name=active_char).first().char_id
-            user.active_char = char_id
-            session.add(user)
+    # # Users
+    # with open('users.json') as userfile:
+    #     user_json = json.load(userfile)
+    # users_to_add = []
+    # characters_to_add = []
+    # for discord_id, userdata in user_json.items():
+    #     discord_id = int(discord_id)
+    #     character_data = userdata['characters']
+    #     for charname, chardata in character_data.items():
+    #         picture_url = chardata['picture']
+    #         npc_status = chardata['npc']
+    #         display_name = chardata['displayname']
+    #         rank_override = chardata.get('rank_override', None)
+    #         characters_to_add.append(Character(
+    #             user_id=discord_id,
+    #             name=charname,
+    #             display_name=display_name,
+    #             picture_url=picture_url,
+    #             npc_status=npc_status,
+    #             rank_override=rank_override
+    #         ))
+
+    #     users_to_add.append(User(
+    #         discord_id=discord_id,
+    #         active_char=None
+    #     ))
+    # with session_manager(session_maker) as session:
+    #     session.add_all(users_to_add)
+    #     session.add_all(characters_to_add)
+
+    # # Set Active Characters
+    # for discord_id, userdata in user_json.items():
+    #     discord_id = int(discord_id)
+    #     active_char = userdata['active']
+    #     with session_manager(session_maker) as session:
+    #         user=session.query(User).filter_by(discord_id=discord_id).first()
+    #         char_id = session.query(Character.char_id).filter_by(name=active_char).first().char_id
+    #         user.active_char = char_id
+    #         session.add(user)
 

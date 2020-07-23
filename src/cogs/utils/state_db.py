@@ -31,6 +31,22 @@ class Character(Base):
     def __repr__(self):
         return f'<Character({self.char_id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank_override=})>'
 
+class Transaction(Base):
+    __tablename__ = 'transactions'
+
+    transaction_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    description = Column(String, nullable=False)
+    date = Column(String, nullable=False)
+    platinum = Column(Integer)
+    electrum = Column(Integer)
+    gold = Column(Integer)
+    silver = Column(Integer)
+    copper = Column(Integer)
+
+    def __repr__(self):
+        return f'<Transaction({self.transaction_id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
+
 
 class State_DB():
     def __init__(self, db_path):

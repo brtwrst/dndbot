@@ -2,7 +2,6 @@
 It will add commands to speak in character.
 """
 # pylint: disable=E0402, E0211
-import json
 from urllib.parse import urlparse
 from discord.ext import commands
 from discord import Embed, DMChannel, Member, Role
@@ -12,9 +11,6 @@ from .utils.state_db import User, Character
 class InChar(commands.Cog, name='Commands'):
     def __init__(self, client):
         self.client = client
-        with open('../state/users.json') as f:
-            self.users = json.load(f)
-        self.users = {int(k): v for k, v in self.users.items()}
 
     def is_dm_chat():
         async def predicate(ctx):
