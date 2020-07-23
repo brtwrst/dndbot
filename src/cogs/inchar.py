@@ -60,7 +60,6 @@ class InChar(commands.Cog, name='Commands'):
             session.add(newchar)
         await ctx.send(f'{charname} {response}!')
 
-
     @commands.command(
         name='deletechar',
         aliases=['delchar', 'removechar', 'remchar', 'rmchar']
@@ -78,7 +77,7 @@ class InChar(commands.Cog, name='Commands'):
         hidden=True
     )
     @is_admin()
-    async def setrank(self, ctx, target_user:Member, charname:str, rank:Role=None):
+    async def setrank(self, ctx, target_user: Member, charname: str, rank: Role = None):
         """Override a characters rank"""
 
         user_id = target_user.id
@@ -97,7 +96,7 @@ class InChar(commands.Cog, name='Commands'):
         hidden=True,
     )
     @is_admin()
-    async def admin_show_chars(self, ctx, target_user:Member):
+    async def admin_show_chars(self, ctx, target_user: Member):
         """Show all your characters"""
         user_id = target_user.id
         with self.client.state.get_session() as session:
@@ -119,7 +118,8 @@ class InChar(commands.Cog, name='Commands'):
         user_id = ctx.author.id
         with self.client.state.get_session() as session:
             char_list = session.query(Character).filter_by(user_id=user_id).all()
-            active_char_id = session.query(User.active_char).filter_by(discord_id=user_id).first().active_char
+            active_char_id = session.query(User.active_char).filter_by(
+                discord_id=user_id).first().active_char
             active_char = session.query(Character).filter_by(char_id=active_char_id).first()
 
         list_to_print = '\n'.join(c.name + ' (NPC)' * c.npc_status for c in char_list)
@@ -173,7 +173,8 @@ class InChar(commands.Cog, name='Commands'):
         user_id = ctx.author.id
         with self.client.state.get_session() as session:
             user = session.query(User).filter_by(discord_id=user_id).first()
-            char_list = session.query(Character.name, Character.char_id).filter_by(user_id=user_id).all()
+            char_list = session.query(
+                Character.name, Character.char_id).filter_by(user_id=user_id).all()
             if not user or not char_list:
                 return
 
@@ -194,7 +195,6 @@ class InChar(commands.Cog, name='Commands'):
             selected_char = session.query(Character).filter_by(char_id=selected_char).first()
             if not selected_char:
                 return
-
 
         pic_url = selected_char.picture_url
         guild_ranks = self.client.config['ranks']

@@ -10,6 +10,7 @@ from .utils.state_db import Transaction
 
 CURRENCIES = ('copper', 'silver', 'electrum', 'gold', 'platinum')
 
+
 class Bank(commands.Cog, name='Bank'):
     def __init__(self, client):
         self.client = client
@@ -109,11 +110,14 @@ class Bank(commands.Cog, name='Bank'):
         name='history',
         aliases=['log'],
     )
-    async def bank_history(self, ctx):
+    async def bank_history(self, ctx, start=0, num=10):
         """View the bank transaction history"""
         e = Embed(title='Transaction Log')
         with self.client.state.get_session() as session:
-            for transaction in reversed(session.query(Transaction).order_by(Transaction.transaction_id.desc()).limit(10).all()):
+            for transaction in reversed(
+                session.query(Transaction).order_by(Transaction.transaction_id.desc())
+                    .limit(num+start).all()[start:num+start]
+            ):
                 title, body = self.format_transaction(transaction)
                 e.add_field(inline=False, name=title, value=body)
         await ctx.send(embed=e)
@@ -126,6 +130,7 @@ class Bank(commands.Cog, name='Bank'):
         with self.client.state.get_session() as session:
             session.query(Transaction).filter_by(transaction_id=transaction_id).delete()
         await ctx.send('Success')
+
 
 def setup(client):
     client.add_cog(Bank(client))

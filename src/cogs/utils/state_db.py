@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 #pylint: disable=E1101
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -30,6 +31,7 @@ class Character(Base):
 
     def __repr__(self):
         return f'<Character({self.char_id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank_override=})>'
+
 
 class Transaction(Base):
     __tablename__ = 'transactions'
@@ -65,5 +67,3 @@ class State_DB():
             raise
         finally:
             session.close()
-
-
