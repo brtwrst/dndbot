@@ -32,7 +32,7 @@ class Bank(commands.Cog, name='Bank'):
         with self.client.state.get_session() as session:
             for transaction in session.query(Transaction).all():
                 for c in CURRENCIES:
-                    coins[c] += amount if (amount := getattr(transaction, c)) else 0
+                    coins[c] += getattr(transaction, c) or 0
         return coins
 
     async def print_balance(self, ctx):
@@ -44,7 +44,7 @@ class Bank(commands.Cog, name='Bank'):
 
     def format_transaction(self, transaction):
         coins = {
-            c: amount if (amount := getattr(transaction, c)) else 0 for c in CURRENCIES
+            c: getattr(transaction, c) if getattr(transaction, c) else 0 for c in CURRENCIES
         }
         date = transaction.date.split('.')[0].replace('T', ' ') + ' UTC'
         user = self.client.get_user(transaction.user_id)
@@ -124,6 +124,7 @@ class Bank(commands.Cog, name='Bank'):
 
     @bank.command(
         name='delete',
+        aliases=['remove']
     )
     async def bank_delete(self, ctx, transaction_id):
         """Delete a transaction"""

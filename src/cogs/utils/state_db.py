@@ -14,8 +14,8 @@ class User(Base):
     discord_id = Column(Integer, primary_key=True, autoincrement=False)
     active_char = Column(Integer, ForeignKey('characters.char_id'))
 
-    def __repr__(self):
-        return f'<User({self.discord_id=}, {self.active_char=})>'
+    # def __repr__(self):
+    #     return f'<User({self.discord_id=}, {self.active_char=})>'
 
 
 class Character(Base):
@@ -29,8 +29,8 @@ class Character(Base):
     npc_status = Column(Boolean, nullable=False)
     rank_override = Column(Integer)
 
-    def __repr__(self):
-        return f'<Character({self.char_id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank_override=})>'
+    # def __repr__(self):
+    #     return f'<Character({self.char_id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank_override=})>'
 
 
 class Transaction(Base):
@@ -46,8 +46,8 @@ class Transaction(Base):
     silver = Column(Integer)
     copper = Column(Integer)
 
-    def __repr__(self):
-        return f'<Transaction({self.transaction_id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
+    # def __repr__(self):
+    #     return f'<Transaction({self.transaction_id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
 
 
 class State_DB():
