@@ -63,7 +63,6 @@ class InChar(commands.Cog, name='Commands'):
             newchar.npc_status = True if npc else False
             session.add(newchar)
         await ctx.send(f'{charname} {response}!')
-        print(newchar)
 
 
     @commands.command(
@@ -90,7 +89,6 @@ class InChar(commands.Cog, name='Commands'):
 
         with self.client.state.get_session() as session:
             char = session.query(Character).filter_by(user_id=user_id, name=charname).first()
-            print(char)
             if not char:
                 raise commands.BadArgument('Invalid user or charactername')
             char.rank_override = rank.id if rank else None
