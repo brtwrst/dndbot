@@ -34,7 +34,7 @@ class InChar(commands.Cog, name='Commands'):
         user_id = ctx.author.id
         with self.client.state.get_session() as session:
             # Check if user exists and create entry if it does not
-            if len(session.query(User).filter_by(discord_id=user_id).all()) == 0:
+            if session.query(User).filter_by(discord_id=user_id).count() == 0:
                 user = User(discord_id=user_id, active_char=None)
                 session.add(user)
 

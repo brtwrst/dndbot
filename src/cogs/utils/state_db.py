@@ -38,6 +38,7 @@ class Transaction(Base):
 
     transaction_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
+    account_nr = Column(Integer, ForeignKey('users.discord_id'), nullable=False)
     description = Column(String, nullable=False)
     date = Column(String, nullable=False)
     platinum = Column(Integer)
@@ -45,6 +46,7 @@ class Transaction(Base):
     gold = Column(Integer)
     silver = Column(Integer)
     copper = Column(Integer)
+    confirmed = Column(Boolean, nullable=False)
 
     # def __repr__(self):
     #     return f'<Transaction({self.transaction_id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
