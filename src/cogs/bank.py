@@ -99,6 +99,9 @@ class Bank(commands.Cog, name='Bank'):
         transaction.confirmed = confirm
         transaction.date = datetime.now(tz=timezone.utc).isoformat()
 
+        with self.client.state.get_session() as session:
+            session.add(transaction)
+
         if send:
             transaction2 = Transaction()
             for currency in CURRENCIES:
@@ -110,10 +113,7 @@ class Bank(commands.Cog, name='Bank'):
             transaction2.confirmed = confirm
             transaction2.date = datetime.now(tz=timezone.utc).isoformat()
 
-
-        with self.client.state.get_session() as session:
-            session.add(transaction)
-            if transaction2:
+            with self.client.state.get_session() as session:
                 session.add(transaction2)
 
         e = Embed(
@@ -262,8 +262,9 @@ class Bank(commands.Cog, name='Bank'):
                 await ctx.send('That user does not have an account')
                 return
         await self.process_transaction(
-                ctx, transaction_string, description, receiver.id, confirm=False, send=True
-            )
+            ctx, transaction_string, description, receiver.id, confirm=False, send=True
+        )
+
 
 def setup(client):
     client.add_cog(Bank(client))
