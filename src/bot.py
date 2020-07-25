@@ -4,6 +4,7 @@
 import json
 from datetime import datetime
 from os import path, listdir
+from aiohttp import ClientSession
 from discord.ext.commands import Bot
 from cogs.utils.state_db import State_DB
 
@@ -19,11 +20,11 @@ class Blackwing(Bot):
         self.state = State_DB(db_path='sqlite:///../state/state.db.sqlite3')
 
     async def start(self, *args, **kwargs):
-        # self.session = ClientSession()
+        self.session = ClientSession()
         await super().start(self.config["bot_key"], *args, **kwargs)
 
     async def close(self):
-        # await self.session.close()
+        await self.session.close()
         await super().close()
 
     def user_is_admin(self, user):

@@ -50,6 +50,21 @@ class Transaction(Base):
     #     return f'<Transaction({self.transaction_id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
 
 
+class EmbedData(Base):
+    __tablename__ = 'embeds'
+
+    embed_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    guild_id = Column(Integer, nullable=False)
+    channel_id = Column(Integer, nullable=False)
+    message_id = Column(Integer, nullable=False)
+    content = Column(String, nullable=False)
+    date = Column(String, nullable=False)
+
+    # def __repr__(self):
+    #     return f'<EmbedData({self.embed_id=}, {self.user_id=}, {self.guild_id=}, {self.channel_id=}, {self.message_id=}, {self.content=}, {self.date=})>'
+
+
 class State_DB():
     def __init__(self, db_path):
         self.engine = create_engine(db_path)
