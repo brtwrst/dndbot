@@ -131,8 +131,8 @@ Template:
             message = await self.post_embed(embed_data)
             embed_data.message_id = message.id
         except Exception as error:
-            await ctx.send('Error during embed creation - check error log')
-            self.client.last_errors.append((error, datetime.utcnow(), ctx))
+            await ctx.send('Error during embed creation - check error log (+error)')
+            await self.client.log_error(error, ctx)
             with self.client.state.get_session() as session:
                 session.query(EmbedData).filter_by(embed_id=embed_data.embed_id).delete()
             return
@@ -187,9 +187,13 @@ Template:
         with self.client.state.get_session() as session:
             embed_data = session.query(EmbedData).filter_by(embed_id=embed_id).first()
             embed_data.content = json.dumps(content_dict)
-            message = await self.post_embed(embed_data)
+            try:
+                message = await self.post_embed(embed_data)
+                await ctx.send(f'Embed updated {message.jump_url}')
+            except Exception as error:
+                await ctx.send('Error during embed edit - check error log (+error)')
+                await self.client.log_error(error, ctx)
 
-        await ctx.send(f'Embed updated {message.jump_url}')
 
     @embed_base.command(
         name='delete',

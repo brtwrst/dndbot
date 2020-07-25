@@ -10,9 +10,10 @@ Commands:
 """
 import json
 import traceback
+import typing
 from datetime import datetime
 from os import path, listdir
-from discord import Activity, Embed, GroupChannel
+from discord import Embed
 from discord.ext import commands
 
 
@@ -20,9 +21,6 @@ class Management(commands.Cog, name='Management'):
     def __init__(self, client):
         self.client = client
         self.reload_config()
-        self.default_activity = Activity(name='other Characters (+help)', type=0)
-        self.startup_error_activity = Activity(name='Startup ERROR', type=3)
-        self.runtime_error_activity = Activity(name='Runtime ERROR', type=3)
 
     async def cog_check(self, ctx):
         return self.client.user_is_admin(ctx.author)
@@ -31,7 +29,7 @@ class Management(commands.Cog, name='Management'):
     async def on_ready(self):
         loaded = self.client.extensions
         unloaded = [x for x in self.crawl_cogs() if x not in loaded and 'extra.' not in x]
-        activity = self.startup_error_activity if len(unloaded) > 0 else self.default_activity
+        activity = self.client.error_activity if unloaded else self.client.default_activity
         await self.client.change_presence(activity=activity)
 
     # ----------------------------------------------
@@ -64,9 +62,7 @@ class Management(commands.Cog, name='Management'):
 
         if isinstance(error, commands.CheckFailure):
             await ctx.author.send(
-                'You cannot run this command in that channel! '
-                'Please type character related commands here '
-                '(or type `+help` for more information)'
+                'You are not allowed to run this command!'
             )
             await ctx.message.delete()
             return
@@ -81,11 +77,9 @@ class Management(commands.Cog, name='Management'):
             await ctx.send(embed=embed)
             return
 
-        # In case of an unhandled error -> Save the error + current datetime
-        # so it can be accessed later with the error command
-        await ctx.send('Sorry, something went wrong. Error saved in error log (+help error)')
-        self.client.last_errors.append((error, datetime.utcnow(), ctx))
-        await self.client.change_presence(activity=self.runtime_error_activity)
+        # In case of an unhandled error -> Save the error so it can be accessed later
+        await ctx.send(self.client.error_string)
+        await self.client.log_error(error, ctx)
 
         print(f'Ignoring exception in command {ctx.command}:', flush=True)
         traceback.print_exception(
@@ -212,10 +206,18 @@ class Management(commands.Cog, name='Management'):
     @commands.group(
         invoke_without_command=True,
         name='error',
+        hidden=True,
         aliases=['errors']
     )
-    async def error(self, ctx):
+    async def error(self, ctx, n: typing.Optional[int] = None):
         """Show a concise list of stored errors"""
+
+        if n is not None:
+            await self.print_traceback(ctx, n)
+            return
+
+        NUM_ERRORS_PER_PAGE = 15
+
         error_log = self.client.last_errors
 
         if not error_log:
@@ -224,9 +226,10 @@ class Management(commands.Cog, name='Management'):
 
         response = [f'```css\nNumber of stored errors: {len(error_log)}']
         for i, exc_tuple in enumerate(error_log):
-            exc, date, error_ctx = exc_tuple
+            exc, date, error_source, *_ = exc_tuple
             call_info = (
-                f'CMD: {error_ctx.invoked_with}' if error_ctx else 'no command'
+                f'CMD: {error_source.invoked_with}'
+                if isinstance(error_source, commands.Context) else 'outside command'
             )
             response.append(
                 f'{i}: ['
@@ -235,9 +238,13 @@ class Management(commands.Cog, name='Management'):
                 + call_info
                 + f']\nException: {exc}'
             )
-        response.append('```')
-
-        await ctx.send('\n'.join(response))
+            if i % NUM_ERRORS_PER_PAGE == NUM_ERRORS_PER_PAGE-1:
+                response.append('```')
+                await ctx.send('\n'.join(response))
+                response = [f'```css']
+        if len(response) > 1:
+            response.append('```')
+            await ctx.send('\n'.join(response))
 
     @error.command(
         name='clear',
@@ -252,7 +259,7 @@ class Management(commands.Cog, name='Management'):
             self.client.last_errors.pop(n)
             await ctx.send(f'Deleted error #{n}')
         await self.client.change_presence(
-            activity=self.default_activity
+            activity=self.client.default_activity
         )
 
     @error.command(
@@ -261,6 +268,9 @@ class Management(commands.Cog, name='Management'):
     )
     async def error_traceback(self, ctx, n: int = None):
         """Print the traceback of error [n] from the error log"""
+        await self.print_traceback(ctx, n)
+
+    async def print_traceback(self, ctx, n):
         error_log = self.client.last_errors
 
         if not error_log:
@@ -276,7 +286,7 @@ class Management(commands.Cog, name='Management'):
             await ctx.send('Error index does not exist')
             return
 
-        exc, date, error_ctx = error_log[n]
+        exc, date, error_source, orig_content = error_log[n]
         delta = (datetime.utcnow() - date).total_seconds()
         hours = int(delta // 3600)
         seconds = int(delta - (hours * 3600))
@@ -285,13 +295,19 @@ class Management(commands.Cog, name='Management'):
             traceback.format_exception(type(exc), exc, exc.__traceback__)
         )
         response = [f'`Error occured {delta_str}`']
-        if error_ctx:
-            is_group = isinstance(error_ctx.channel, GroupChannel)
-            response.append(f'`Command: {error_ctx.invoked_with}`')
-            response.append(f'`User: {error_ctx.author.name}`')
-            response.append(f'`Channel:{error_ctx.channel.name if is_group else " DM"}`')
-        else:
-            response.append('`Error happened outside of command`')
+        if error_source is not None:
+            response.append(
+                f'`Server:{error_source.guild.name} | Channel: {error_source.channel.name}`'
+            )
+            response.append(
+                f'`User: {error_source.author.name}#{error_source.author.discriminator}`'
+            )
+            if isinstance(error_source, commands.Context):
+                response.append(f'`Command: {error_source.invoked_with}`')
+                response.append(error_source.message.jump_url)
+            else:
+                response.append(f'`Command: No Command`')
+                response.append(error_source.jump_url)
         response.append(f'```python\n')
         num_chars = sum(len(line) for line in response)
         for line in tb.split('\n'):
@@ -304,6 +320,12 @@ class Management(commands.Cog, name='Management'):
                 num_chars = 0
         response.append('```')
         await ctx.send('\n'.join(response))
+        if error_source is not None:
+            e = Embed(title='Full command that caused the error:',
+                      description=orig_content)
+            e.set_footer(text=error_source.author.display_name,
+                         icon_url=error_source.author.avatar_url)
+            await ctx.send(embed=e)
 
     # ----------------------------------------------
     # Function to stop the bot

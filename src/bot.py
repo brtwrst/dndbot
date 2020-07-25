@@ -5,7 +5,8 @@ import json
 from datetime import datetime
 from os import path, listdir
 from aiohttp import ClientSession
-from discord.ext.commands import Bot
+from discord import Activity, Message
+from discord.ext.commands import Bot, Context
 from cogs.utils.state_db import State_DB
 
 
@@ -16,6 +17,9 @@ class Blackwing(Bot):
         with open('../state/config.json') as conffile:
             self.config = json.load(conffile)
         self.last_errors = []
+        self.default_activity = Activity(name='other Characters (+help)', type=0)
+        self.error_activity = Activity(name='! other Characters (+help)', type=0)
+        self.error_string = 'Sorry, something went wrong. We will look into it.'
         self.mainguild = None
         self.state = State_DB(db_path='sqlite:///../state/state.db.sqlite3')
 
@@ -26,6 +30,14 @@ class Blackwing(Bot):
     async def close(self):
         await self.session.close()
         await super().close()
+
+    async def log_error(self, error, origin):
+        if isinstance(origin, Context):
+            content = origin.message.content
+        elif isinstance(origin, Message):
+            content = origin.content
+        self.last_errors.append((error, datetime.utcnow(), origin, content))
+        await client.change_presence(activity=self.error_activity)
 
     def user_is_admin(self, user):
         if user.id in self.config['admins']:
@@ -54,7 +66,7 @@ for extension in reversed(STARTUP_EXTENSIONS):
     try:
         client.load_extension(f'{extension}')
     except Exception as e:
-        client.last_errors.append((e, datetime.utcnow(), None))
+        client.last_errors.append((e, datetime.utcnow(), None, None))
         exc = f'{type(e).__name__}: {e}'
         print(f'Failed to load extension {extension}\n{exc}')
 
