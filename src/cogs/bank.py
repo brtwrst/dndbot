@@ -257,6 +257,10 @@ class Bank(commands.Cog, name='Bank'):
         if '-' in transaction_string:
             await ctx.send('You can only send positive amounts')
             return
+        with self.client.state.get_session() as session:
+            if session.query(User).filter_by(discord_id=receiver.id).count() == 0:
+                await ctx.send('That user does not have an account')
+                return
         await self.process_transaction(
                 ctx, transaction_string, description, receiver.id, confirm=False, send=True
             )
