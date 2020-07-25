@@ -194,9 +194,9 @@ Template:
                 await ctx.send('Error during embed edit - check error log (+error)')
                 await self.client.log_error(error, ctx)
 
-
     @embed_base.command(
         name='delete',
+        aliases=['archive', 'del'],
     )
     async def embed_delete(self, ctx, embed_ids: commands.Greedy[int]):
         res = []
@@ -205,44 +205,76 @@ Template:
                 db_query = session.query(EmbedData).filter_by(embed_id=embed_id)
                 embed_data = db_query.first()
                 if not embed_data:
-                    res.append(f'{embed_id}: Embed ID not found in Database - ignoring')
+                    res.append(f'{embed_id}: Embed ID not found in Database')
                     continue
-                channel = self.client.get_channel(embed_data.channel_id)
+                if not embed_data.message_id:
+                    res.append(f'{embed_id}: Is already archived')
+                    continue
                 try:
+                    channel = self.client.get_channel(embed_data.channel_id)
                     message = await channel.fetch_message(embed_data.message_id)
                     await message.delete()
-                    res.append(f'{embed_id}: Embed + Message deleted')
+                    res.append(f'{embed_id}: Embed archived')
                 except NotFound:
-                    res.append(f'{embed_id}: No message for ID found - deleting from database')
-                session.query(EmbedData).filter_by(embed_id=embed_id).delete()
+                    res.append(f'{embed_id}: Embed was deleted manually - archiving db entry')
+                    pass
+                db_entry = session.query(EmbedData).filter_by(embed_id=embed_id).first()
+                db_entry.message_id = 0
+
         await ctx.send('```\n' + '\n'.join(res) + '```')
 
     @embed_base.command(
         name='list',
+        aliases=['active']
     )
     async def embed_list(self, ctx):
         with self.client.state.get_session() as session:
-            embeds = session.query(EmbedData).all()
+            embeds = session.query(EmbedData).filter(EmbedData.message_id != 0).all()
+            to_print = ['Active Embeds:']
 
-        if not embeds:
-            await ctx.send('No embeds in database')
-            return
+            if not embeds:
+                await ctx.send('No active found')
+                return
 
-        await ctx.trigger_typing()
+            await ctx.trigger_typing()
 
-        to_print = ['Embeds in database:']
-
-        for ed in embeds:
-            try:
-                channel = self.client.get_channel(ed.channel_id)
-                message = await channel.fetch_message(ed.message_id)
-            except NotFound:
-                to_print.append(f'{ed.embed_id}: message not found in discord - can be deleted')
-                continue
-            title = json.loads(ed.content).get('title', '')
-            to_print.append(f'{ed.embed_id}: {channel.mention} {title} -> <{message.jump_url}>')
+            for ed in embeds:
+                try:
+                    channel = self.client.get_channel(ed.channel_id)
+                    message = await channel.fetch_message(ed.message_id)
+                except NotFound:
+                    ed.message_id = 0
+                    to_print.append(f'{ed.embed_id}: message not found in discord - db updated')
+                    continue
+                title = json.loads(ed.content).get('title', '')
+                to_print.append(f'{ed.embed_id}: {channel.mention} {title} ><{message.jump_url}>')
 
         for i in range(0, len(to_print), 11):
+            await ctx.send('\n'.join(to_print[i:i+11]))
+
+    @embed_base.command(
+        name='search',
+        aliases=['find'],
+    )
+    async def embed_search(self, ctx, *, search_term):
+        search_term = search_term.replace('`', '')
+        with self.client.state.get_session() as session:
+            embeds = session.query(EmbedData).filter(
+                EmbedData.content.like(f'%{search_term}%')).all()
+
+            if not embeds:
+                await ctx.send('No embeds found for this query')
+                return
+
+            await ctx.trigger_typing()
+
+            to_print = ['Found these embeds:']
+
+            for ed in embeds:
+                title = json.loads(ed.content).get('title', '')
+                to_print.append(f'ID: {ed.embed_id} | Title: {title} | Created: {ed.date}')
+
+        for i in range(0, len(to_print), 20):
             await ctx.send('\n'.join(to_print[i:i+11]))
 
 
