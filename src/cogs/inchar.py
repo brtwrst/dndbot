@@ -12,11 +12,6 @@ class InChar(commands.Cog, name='Commands'):
     def __init__(self, client):
         self.client = client
 
-    def is_dm_chat():
-        async def predicate(ctx):
-            return isinstance(ctx.channel, DMChannel)
-        return commands.check(predicate)
-
     def is_admin():
         async def predicate(ctx):
             return ctx.bot.user_is_admin(ctx.author)
@@ -26,7 +21,6 @@ class InChar(commands.Cog, name='Commands'):
         name='addchar',
         aliases=['add']
     )
-    @is_dm_chat()
     async def addchar(self, ctx, charname, displayname, pic_url, npc=None):
         """Add a character"""
         valid_filetypes = ('.jpg', '.jpeg', '.png')
@@ -64,7 +58,6 @@ class InChar(commands.Cog, name='Commands'):
         name='deletechar',
         aliases=['delchar', 'removechar', 'remchar', 'rmchar']
     )
-    @is_dm_chat()
     async def delete(self, ctx, charname):
         """Remove a character"""
         with self.client.state.get_session() as session:
@@ -74,7 +67,6 @@ class InChar(commands.Cog, name='Commands'):
 
     @commands.command(
         name='setrank',
-        hidden=True
     )
     @is_admin()
     async def setrank(self, ctx, target_user: Member, charname: str, rank: Role = None):
@@ -93,7 +85,6 @@ class InChar(commands.Cog, name='Commands'):
 
     @commands.command(
         name='alist',
-        hidden=True,
     )
     @is_admin()
     async def admin_show_chars(self, ctx, target_user: Member):
@@ -112,7 +103,6 @@ class InChar(commands.Cog, name='Commands'):
         name='list',
         aliases=['listchars'],
     )
-    @is_dm_chat()
     async def show_chars(self, ctx):
         """Show all your characters"""
         user_id = ctx.author.id
@@ -135,7 +125,6 @@ class InChar(commands.Cog, name='Commands'):
         name='char',
         aliases=['active', 'activechar']
     )
-    @is_dm_chat()
     async def char(self, ctx, charname=None):
         """Select active character"""
         user_id = ctx.author.id
@@ -151,7 +140,6 @@ class InChar(commands.Cog, name='Commands'):
     @commands.command(
         name='show',
     )
-    @is_dm_chat()
     async def show(self, ctx, charname):
         """Select active character"""
         user_id = ctx.author.id
@@ -166,7 +154,8 @@ class InChar(commands.Cog, name='Commands'):
         await ctx.send(f'`+addchar {charname} {displayname} {pic_url} {"npc" if npc else ""}`')
 
     @commands.command(
-        name='+'
+        name='write',
+        aliases=['+', 'post']
     )
     async def write_in_character(self, ctx, charname, *, user_input=''):
         """Write a message as a specific character"""

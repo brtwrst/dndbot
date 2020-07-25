@@ -1,5 +1,6 @@
 {
     "bot_key": "123456789",
+    "admins": [],
     "admin_roles": [],
     "ranks": [],
     "mainguild": 123456789

@@ -16,6 +16,7 @@ from discord.ext.commands import HelpCommand, DefaultHelpCommand
 
 #pylint: disable=E1101
 
+
 class myHelpCommand(HelpCommand):
     def __init__(self, **options):
         super().__init__(**options)
@@ -149,35 +150,14 @@ class Help(commands.Cog):
                 'help': 'Shows help about the bot, a command, or a category',
                 'hidden': True,
             },
-            verify_checks=False
+            verify_checks=True
         )
 
     async def cog_check(self, ctx):
         return self.client.user_is_admin(ctx.author)
 
     def cog_unload(self):
-        self.client.get_command('help').hidden = False
         self.client.help_command = DefaultHelpCommand()
-
-    @commands.command(
-        aliases=['halpall'],
-        hidden=True
-    )
-    async def helpall(self, ctx, *, text=None):
-        """Print bot help including all hidden commands"""
-        self.client.help_command = myHelpCommand(show_hidden=True)
-        if text:
-            await ctx.send_help(text)
-        else:
-            await ctx.send_help()
-        self.client.help_command = myHelpCommand(
-            command_attrs={
-                'aliases': ['halp'],
-                'help': 'Shows help about the bot, a command, or a category',
-                'hidden': True
-            },
-            verify_checks=False
-        )
 
 
 def setup(client):

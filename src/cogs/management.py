@@ -120,7 +120,6 @@ class Management(commands.Cog, name='Management'):
         name='load',
         brief='Load bot extension',
         description='Load bot extension\n\nExample: !load cogs.stats',
-        hidden=True,
     )
     async def load_extension(self, ctx, extension_name):
         for cog_name in self.crawl_cogs():
@@ -142,7 +141,6 @@ class Management(commands.Cog, name='Management'):
         name='unload',
         brief='Unload bot extension',
         description='Unload bot extension\n\nExample: !unload cogs.stats',
-        hidden=True,
     )
     async def unload_extension(self, ctx, extension_name):
         for cog_name in self.client.extensions:
@@ -167,7 +165,6 @@ class Management(commands.Cog, name='Management'):
         name='reload',
         brief='Reload bot extension',
         description='Reload bot extension\n\nExample: !reload cogs.stats',
-        hidden=True,
         aliases=['re']
     )
     async def reload_extension(self, ctx, extension_name):
@@ -202,7 +199,6 @@ class Management(commands.Cog, name='Management'):
         brief='Get loaded cogs',
         description='Get loaded cogs',
         aliases=['extensions'],
-        hidden=True,
     )
     async def print_cogs(self, ctx):
         loaded = self.client.extensions
@@ -216,7 +212,6 @@ class Management(commands.Cog, name='Management'):
     @commands.group(
         invoke_without_command=True,
         name='error',
-        hidden=True,
         aliases=['errors']
     )
     async def error(self, ctx):
@@ -316,7 +311,6 @@ class Management(commands.Cog, name='Management'):
     @commands.command(
         name='stop',
         aliases=['restart'],
-        hidden=True
     )
     async def stop_bot(self, ctx):
         """Stop and restart the bot"""

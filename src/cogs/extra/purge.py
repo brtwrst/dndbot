@@ -26,7 +26,6 @@ class Purge(commands.Cog, name='Purge'):
     # ----------------------------------------------
     @commands.command(
         name='purge',
-        hidden=True,
     )
     async def purge(
         self, ctx,
@@ -40,7 +39,6 @@ class Purge(commands.Cog, name='Purge'):
 
     @commands.command(
         name='purge_until',
-        hidden=True,
     )
     async def purge_until(
         self, ctx,
@@ -60,7 +58,6 @@ class Purge(commands.Cog, name='Purge'):
 
     @commands.command(
         name='purge_user',
-        hidden=True,
         aliases=['purgeu', 'purgeuser'],
     )
     async def purge_user(
