@@ -272,7 +272,10 @@ Template:
 
             for ed in embeds:
                 title = json.loads(ed.content).get('title', '')
-                to_print.append(f'ID: {ed.embed_id} | Title: {title} | Created: {ed.date}')
+                to_print.append(
+                    f'ID: {ed.embed_id} | Title: {title} | Created: {ed.date}'
+                    f'{" **Active **" if bool(ed.message_id) else " **Inactive **"}'
+                )
 
         for i in range(0, len(to_print), 20):
             await ctx.send('\n'.join(to_print[i:i+11]))
