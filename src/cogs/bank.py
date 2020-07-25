@@ -2,7 +2,7 @@
 It will add commands to manage a guild bank.
 """
 # pylint: disable=E0402, E0211
-from datetime import datetime
+from datetime import datetime, timezone
 from discord.ext import commands
 from discord.utils import get
 from discord import Embed
@@ -95,7 +95,7 @@ class Bank(commands.Cog, name='Bank'):
 
         transaction.description = description
         transaction.user_id = ctx.author.id
-        transaction.date = datetime.now().isoformat()
+        transaction.date = datetime.now(tz=timezone.utc).isoformat()
 
         with self.client.state.get_session() as session:
             session.add(transaction)
