@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from discord.ext import commands
 from discord.errors import NotFound
 from discord import Embed, TextChannel, File
+from sqlalchemy.orm.exc import NoResultFound
 from .utils.state_db import EmbedData
 
 
@@ -18,10 +19,9 @@ class EmbedController(commands.Cog, name='EmbedController'):
     async def cog_check(self, ctx):
         return self.client.user_is_admin(ctx.author)
 
-    async def post_embed(self, embed_data):
+    def construct_embed(self, embed_data):
         content = json.loads(embed_data.content)
-        user = self.client.get_user(embed_data.user_id)
-        channel = self.client.get_channel(embed_data.channel_id)
+        user = self.client.get_user(embed_data.user_id) if embed_data.user_id else None
 
         embed = Embed(
             title=content.get('title', None),
@@ -35,7 +35,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
                 inline=field.get('inline', False),
             )
         embed.set_footer(
-            text=f'ID: {embed_data._id} | @{user.name}'
+            text=f'ID: {embed_data._id} | @{user.name if user else ""}'
         )
         author = content.get('author', None)
         if author:
@@ -44,58 +44,78 @@ class EmbedController(commands.Cog, name='EmbedController'):
                 icon_url=author.get('icon_url', None),
             )
 
-        # If embed already has a message id it was posted before -> try to edit
+        return embed
+
+    def add_embed_to_db(self, embed_data):
+        with self.client.state.get_session() as session:
+            session.add(embed_data)
+        return embed_data._id
+
+    async def post_embed(self, embed_id, new_channel_id=None):
+        with self.client.state.get_session() as session:
+            embed_data = session.query(EmbedData).filter_by(_id=embed_id).one()
+
         if embed_data.message_id:
-            message = await channel.fetch_message(embed_data.message_id)
-            if not message:
-                raise commands.CommandError('Cannot find message to edit')
-            await message.edit(embed=embed)
-        else:
-            message = await channel.send(embed=embed)
+            await self.delete_embed_message(embed_id)
+
+        if new_channel_id:
+            with self.client.state.get_session() as session:
+                embed_data = session.query(EmbedData).filter_by(_id=embed_id).one()
+                embed_data.channel_id = new_channel_id
+
+        channel = self.client.get_channel(embed_data.channel_id)
+        if not channel:
+            raise ValueError('Error posting Embed - channel does not exist')
+
+        embed = self.construct_embed(embed_data)
+        message = await channel.send(embed=embed)
+
+        with self.client.state.get_session() as session:
+            embed_data = session.query(EmbedData).filter_by(_id=embed_id).one()
+            embed_data.message_id = message.id
 
         return message
 
-    @commands.group(
-        name='e',
-        aliases=['embed'],
-        invoke_without_command=True,
-    )
-    async def embed_base(self, ctx):
-        pass
+    async def edit_embed(self, embed_id, new_content):
+        with self.client.state.get_session() as session:
+            embed_data = session.query(EmbedData).filter_by(_id=embed_id).one()
+            embed_data.content = json.dumps(new_content)
+        try:
+            channel = self.client.get_channel(embed_data.channel_id)
+            if not channel:
+                raise ValueError('Error editing Embed - channel does not exist')
+            message = await channel.fetch_message(embed_data.message_id)
+            if not message:
+                message = await self.post_embed(embed_id, embed_data.channel_id)
+                status = 'Embed not found - reposted'
+            else:
+                embed = self.construct_embed(embed_data)
+                await message.edit(embed=embed)
+                status = 'Embed updated'
+            return f'{status} {message.jump_url}'
+        except Exception as error:
+            await self.client.log_error(error, None)
+            return 'Error during embed edit - check error log (+error)'
 
-    @embed_base.command(
-        name='add',
-        aliases=['post'],
-    )
-    async def embed_add(self, ctx, channel: TextChannel = None, *, user_input=''):
-        if not channel or (not user_input and len(ctx.message.attachments) == 0):
-            await ctx.send("""Please provide a string, a link to a pastebin or a file
-Template:
-```
-{
-    "title": "Title1",
-    "description": "description",
-    "fields": [
-        {
-            "name": "Field1",
-            "value": "Value1",
-            "inline": true
-        },
-        {
-            "name": "Field2",
-            "value": "Value2",
-            "inline": true
-        }
-    ],
-    "author": {
-        "name": "Author_Name",
-        "icon_url": "https://www.google.com/favicon.ico"
-    },
-    "color": null
-}
-```"""
-                           )
-            return
+    async def delete_embed_message(self, embed_id):
+        with self.client.state.get_session() as session:
+            try:
+                embed_data = session.query(EmbedData).filter_by(_id=embed_id).one()
+                channel = self.client.get_channel(embed_data.channel_id)
+                message = await channel.fetch_message(embed_data.message_id)
+                embed_data.message_id = 0
+                await message.delete()
+            except NotFound:
+                return 'Embed message not found in discord'
+            except NoResultFound:
+                return 'Embed not found in database'
+
+        return 'Embed message Deleted'
+
+    async def get_content(self, ctx):
+        user_input = ctx.kwargs.get('user_input', None)
+        if not user_input:
+            return None
 
         if len(ctx.message.attachments) == 1:
             attachment = ctx.message.attachments[0]
@@ -109,10 +129,31 @@ Template:
                 user_input = await response.text()
 
         try:
-            content_dict = json.loads(user_input.replace('`', '').replace('\n', ''))
+            content_dict = json.loads(user_input.replace('`', ''))
         except json.JSONDecodeError as e:
             await ctx.send(f'Error parsing json {e}')
             return
+
+        return content_dict
+
+    @commands.group(
+        name='e',
+        aliases=['embed'],
+        invoke_without_command=True,
+    )
+    async def embed_base(self, ctx):
+        pass
+
+    @embed_base.command(
+        name='add',
+    )
+    async def embed_add(self, ctx, channel: TextChannel = None, *, user_input=''):
+        """Add an embed to a channel using a JSON Object"""
+        if not channel or (not user_input and len(ctx.message.attachments) == 0):
+            await ctx.send('Please provide a string, a link to a pastebin or a file')
+            return
+
+        content_dict = await self.get_content(ctx)
 
         embed_data = EmbedData(
             user_id=ctx.author.id,
@@ -122,24 +163,29 @@ Template:
             message_id=0,
         )
 
-        with self.client.state.get_session() as session:
-            session.add(embed_data)
+        embed_id = self.add_embed_to_db(embed_data)
 
-        # Save to db so it includes the _id (primary key)
-        try:
-            message = await self.post_embed(embed_data)
-            embed_data.message_id = message.id
-        except Exception as error:
-            await ctx.send('Error during embed creation - check error log (+error)')
-            await self.client.log_error(error, ctx)
-            with self.client.state.get_session() as session:
-                session.query(EmbedData).filter_by(_id=embed_data._id).delete()
-            return
-        # update entry with the correct message_id
-        with self.client.state.get_session() as session:
-            session.add(embed_data)
+        await ctx.send(f'Embed added')
+        await ctx.invoke(self.client.get_command('embed post'), embed_id)
 
-        await ctx.send(f'Embed added {message.jump_url}')
+
+    @embed_base.command(
+        name='post',
+        aliases=['repost']
+    )
+    async def embed_post(self, ctx, embed_id, channel: TextChannel = None):
+        message = await self.post_embed(embed_id, channel.id if channel else None)
+        await ctx.send(f'Embed posted {message.jump_url}')
+
+    @embed_base.command(
+        name='edit',
+    )
+    async def embed_edit(self, ctx, embed_id: int, *, user_input=''):
+        """Edit an embed using a JSON Object"""
+        content_dict = await self.get_content(ctx)
+
+        res = await self.edit_embed(embed_id, content_dict)
+        await ctx.send(res)
 
     @embed_base.command(
         name='print',
@@ -154,7 +200,7 @@ Template:
             return
 
         to_send = json.dumps(json.loads(embed_data.content), indent=2)
-        if len(to_send) > 1950:
+        if len(to_send) > 1000:
             await ctx.send(file=File(
                 fp=BytesIO(to_send.encode()),
                 filename=f'Embed_{embed_data._id}.json'
@@ -163,64 +209,15 @@ Template:
             await ctx.send(f'```\n{to_send}```')
 
     @embed_base.command(
-        name='edit',
-    )
-    async def embed_edit(self, ctx, embed_id: int, *, user_input=''):
-        if len(ctx.message.attachments) == 1:
-            attachment = ctx.message.attachments[0]
-            async with self.client.session.get(attachment.url) as response:
-                if not response.status == 200:
-                    return
-                user_input = await response.text()
-        elif user_input.startswith('https://pastebin.com'):
-            url = user_input.split()[0].replace('pastebin.com/', 'pastebin.com/raw/')
-            async with self.client.session.get(url) as response:
-                user_input = await response.text()
-
-        try:
-            content_dict = json.loads(user_input.replace('`', '').replace('\n', ''))
-        except json.JSONDecodeError as e:
-            await ctx.send(f'Error parsing json {e}')
-            return
-
-        with self.client.state.get_session() as session:
-            embed_data = session.query(EmbedData).filter_by(_id=embed_id).first()
-            embed_data.content = json.dumps(content_dict)
-            try:
-                message = await self.post_embed(embed_data)
-                await ctx.send(f'Embed updated {message.jump_url}')
-            except Exception as error:
-                await ctx.send('Error during embed edit - check error log (+error)')
-                await self.client.log_error(error, ctx)
-
-    @embed_base.command(
         name='delete',
         aliases=['archive', 'del'],
     )
     async def embed_delete(self, ctx, embed_ids: commands.Greedy[int]):
-        res = []
+        statuses = []
         for embed_id in embed_ids:
-            with self.client.state.get_session() as session:
-                db_query = session.query(EmbedData).filter_by(_id=embed_id)
-                embed_data = db_query.first()
-                if not embed_data:
-                    res.append(f'{embed_id}: Embed ID not found in Database')
-                    continue
-                if not embed_data.message_id:
-                    res.append(f'{embed_id}: Is already archived')
-                    continue
-                try:
-                    channel = self.client.get_channel(embed_data.channel_id)
-                    message = await channel.fetch_message(embed_data.message_id)
-                    await message.delete()
-                    res.append(f'{embed_id}: Embed archived')
-                except NotFound:
-                    res.append(f'{embed_id}: Embed was deleted manually - archiving db entry')
-                    pass
-                db_entry = session.query(EmbedData).filter_by(_id=embed_id).first()
-                db_entry.message_id = 0
-
-        await ctx.send('```\n' + '\n'.join(res) + '```')
+            status = await self.delete_embed_message(embed_id)
+            statuses.append(f'{embed_id}: ' + status)
+        await ctx.send('```\n' + '\n'.join(statuses) + '```')
 
     @embed_base.command(
         name='list',
