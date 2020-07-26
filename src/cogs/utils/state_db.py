@@ -37,7 +37,7 @@ class Character(Base):
 class Transaction(Base):
     __tablename__ = 'transactions'
 
-    _id = Column('id', Integer, primary_key=True)
+    _id = Column('id', Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     account_nr = Column(Integer, nullable=False)
     description = Column(String, nullable=False)
@@ -58,14 +58,13 @@ class EmbedData(Base):
 
     _id = Column('id', Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer)
-    guild_id = Column(Integer, nullable=False)
     channel_id = Column(Integer, nullable=False)
     message_id = Column(Integer, nullable=False)
     content = Column(String, nullable=False)
     date = Column(String, nullable=False)
 
     # def __repr__(self):
-    #     return f'<EmbedData({self._id=}, {self.user_id=}, {self.guild_id=}, {self.channel_id=}, {self.message_id=}, {self.content=}, {self.date=})>'
+    #     return f'<EmbedData({self._id=}, {self.user_id=}, {self.channel_id=}, {self.message_id=}, {self.content=}, {self.date=})>'
 
 class Quest(Base):
     __tablename__ = 'quests'

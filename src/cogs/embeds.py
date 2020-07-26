@@ -116,7 +116,6 @@ Template:
 
         embed_data = EmbedData(
             user_id=ctx.author.id,
-            guild_id=channel.guild.id,
             channel_id=channel.id,
             content=json.dumps(content_dict),
             date=datetime.now(tz=timezone.utc).isoformat(),
