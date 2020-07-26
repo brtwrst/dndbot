@@ -133,7 +133,7 @@ class InChar(commands.Cog, name='Commands'):
             user = session.query(User).filter_by(_id=user_id).first()
             if not user:
                 return
-            user.active_char = char.char_id if char else None
+            user.active_char = char._id if char else None
             session.add(user)
         await ctx.send(f'Active: {charname}' if user.active_char else 'No active char')
 
