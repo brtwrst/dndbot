@@ -34,12 +34,12 @@ class InChar(commands.Cog, name='Commands'):
         user_id = ctx.author.id
         with self.client.state.get_session() as session:
             # Check if user exists and create entry if it does not
-            if session.query(User).filter_by(discord_id=user_id).count() == 0:
-                user = User(discord_id=user_id, active_char=None)
+            if session.query(User).filter_by(_id=user_id).count() == 0:
+                user = User(_id=user_id, active_char=None)
                 session.add(user)
 
             # Check if character already exists and can be modified
-            res = session.query(Character).filter_by(user_id=user_id, name=charname).all()
+            res = session.query(Character).filter_by(_id=user_id, name=charname).all()
             if res:
                 newchar = res[0]
                 response = 'succesfully modified'
@@ -78,7 +78,7 @@ class InChar(commands.Cog, name='Commands'):
             char = session.query(Character).filter_by(user_id=user_id, name=charname).first()
             if not char:
                 raise commands.BadArgument('Invalid user or charactername')
-            char.rank_override = rank.id if rank else None
+            char.rank = rank.id if rank else None
             session.add(char)
 
         await ctx.send(f'Rank override saved')
@@ -109,8 +109,8 @@ class InChar(commands.Cog, name='Commands'):
         with self.client.state.get_session() as session:
             char_list = session.query(Character).filter_by(user_id=user_id).all()
             active_char_id = session.query(User.active_char).filter_by(
-                discord_id=user_id).first().active_char
-            active_char = session.query(Character).filter_by(char_id=active_char_id).first()
+                _id=user_id).first().active_char
+            active_char = session.query(Character).filter_by(_id=active_char_id).first()
 
         list_to_print = '\n'.join(c.name + ' (NPC)' * c.npc_status for c in char_list)
         pic_url = ''
@@ -130,7 +130,7 @@ class InChar(commands.Cog, name='Commands'):
         user_id = ctx.author.id
         with self.client.state.get_session() as session:
             char = session.query(Character).filter_by(user_id=user_id, name=charname).first()
-            user = session.query(User).filter_by(discord_id=user_id).first()
+            user = session.query(User).filter_by(_id=user_id).first()
             if not user:
                 return
             user.active_char = char.char_id if char else None
@@ -161,9 +161,9 @@ class InChar(commands.Cog, name='Commands'):
         """Write a message as a specific character"""
         user_id = ctx.author.id
         with self.client.state.get_session() as session:
-            user = session.query(User).filter_by(discord_id=user_id).first()
+            user = session.query(User).filter_by(_id=user_id).first()
             char_list = session.query(
-                Character.name, Character.char_id).filter_by(user_id=user_id).all()
+                Character.name, Character._id).filter_by(user_id=user_id).all()
             if not user or not char_list:
                 return
 
@@ -181,15 +181,15 @@ class InChar(commands.Cog, name='Commands'):
             # and should be reattached to the user input
             user_input = charname + ' ' + user_input
         with self.client.state.get_session() as session:
-            selected_char = session.query(Character).filter_by(char_id=selected_char).first()
+            selected_char = session.query(Character).filter_by(_id=selected_char).first()
             if not selected_char:
                 return
 
         pic_url = selected_char.picture_url
         guild_ranks = self.client.config['ranks']
         color = 0x404040
-        if selected_char.rank_override is not None:
-            color = color = ctx.guild.get_role(selected_char.rank_override).color
+        if selected_char.rank is not None:
+            color = color = ctx.guild.get_role(selected_char.rank).color
         elif not selected_char.npc_status and not isinstance(ctx.channel, DMChannel):
             user_roles = [role.id for role in ctx.author.roles]
             for rank in guild_ranks:

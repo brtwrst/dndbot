@@ -35,7 +35,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
                 inline=field.get('inline', False),
             )
         embed.set_footer(
-            text=f'ID: {embed_data.embed_id} | @{user.name}'
+            text=f'ID: {embed_data._id} | @{user.name}'
         )
         author = content.get('author', None)
         if author:
@@ -126,7 +126,7 @@ Template:
         with self.client.state.get_session() as session:
             session.add(embed_data)
 
-        # Save to db so it includes the embed_id (primary key)
+        # Save to db so it includes the _id (primary key)
         try:
             message = await self.post_embed(embed_data)
             embed_data.message_id = message.id
@@ -134,7 +134,7 @@ Template:
             await ctx.send('Error during embed creation - check error log (+error)')
             await self.client.log_error(error, ctx)
             with self.client.state.get_session() as session:
-                session.query(EmbedData).filter_by(embed_id=embed_data.embed_id).delete()
+                session.query(EmbedData).filter_by(_id=embed_data._id).delete()
             return
         # update entry with the correct message_id
         with self.client.state.get_session() as session:
@@ -146,9 +146,9 @@ Template:
         name='print',
         aliases=['show']
     )
-    async def embed_print(self, ctx, embed_id: int):
+    async def embed_print(self, ctx, _id: int):
         with self.client.state.get_session() as session:
-            embed_data = session.query(EmbedData).filter_by(embed_id=embed_id).first()
+            embed_data = session.query(EmbedData).filter_by(_id=_id).first()
 
         if not embed_data:
             await ctx.send('Embed ID not found in Database')
@@ -158,7 +158,7 @@ Template:
         if len(to_send) > 1950:
             await ctx.send(file=File(
                 fp=BytesIO(to_send.encode()),
-                filename=f'Embed_{embed_data.embed_id}.json'
+                filename=f'Embed_{embed_data._id}.json'
             ))
         else:
             await ctx.send(f'```\n{to_send}```')
@@ -185,7 +185,7 @@ Template:
             return
 
         with self.client.state.get_session() as session:
-            embed_data = session.query(EmbedData).filter_by(embed_id=embed_id).first()
+            embed_data = session.query(EmbedData).filter_by(_id=embed_id).first()
             embed_data.content = json.dumps(content_dict)
             try:
                 message = await self.post_embed(embed_data)
@@ -202,7 +202,7 @@ Template:
         res = []
         for embed_id in embed_ids:
             with self.client.state.get_session() as session:
-                db_query = session.query(EmbedData).filter_by(embed_id=embed_id)
+                db_query = session.query(EmbedData).filter_by(_id=embed_id)
                 embed_data = db_query.first()
                 if not embed_data:
                     res.append(f'{embed_id}: Embed ID not found in Database')
@@ -218,7 +218,7 @@ Template:
                 except NotFound:
                     res.append(f'{embed_id}: Embed was deleted manually - archiving db entry')
                     pass
-                db_entry = session.query(EmbedData).filter_by(embed_id=embed_id).first()
+                db_entry = session.query(EmbedData).filter_by(_id=embed_id).first()
                 db_entry.message_id = 0
 
         await ctx.send('```\n' + '\n'.join(res) + '```')
@@ -244,10 +244,10 @@ Template:
                     message = await channel.fetch_message(ed.message_id)
                 except NotFound:
                     ed.message_id = 0
-                    to_print.append(f'{ed.embed_id}: message not found in discord - db updated')
+                    to_print.append(f'{ed._id}: message not found in discord - db updated')
                     continue
                 title = json.loads(ed.content).get('title', '')
-                to_print.append(f'{ed.embed_id}: {channel.mention} {title} ><{message.jump_url}>')
+                to_print.append(f'{ed._id}: {channel.mention} {title} ><{message.jump_url}>')
 
         for i in range(0, len(to_print), 11):
             await ctx.send('\n'.join(to_print[i:i+11]))
@@ -273,7 +273,7 @@ Template:
             for ed in embeds:
                 title = json.loads(ed.content).get('title', '')
                 to_print.append(
-                    f'ID: {ed.embed_id} | Title: {title} | Created: {ed.date}'
+                    f'ID: {ed._id} | Title: {title} | Created: {ed.date}'
                     f'{" **Active **" if bool(ed.message_id) else " **Inactive **"}'
                 )
 

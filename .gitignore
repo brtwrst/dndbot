@@ -136,4 +136,4 @@ dmypy.json
 
 *.json
 .gitkeep
-*.db.sqlite3
+*.sqlite3

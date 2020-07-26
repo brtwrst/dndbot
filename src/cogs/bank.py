@@ -58,7 +58,7 @@ class Bank(commands.Cog, name='Bank'):
         user = self.client.get_user(transaction.user_id)
         user_str = user.name + '#' + user.discriminator
         description = transaction.description
-        transaction_id = transaction.transaction_id
+        transaction_id = transaction._id
         confirmed = transaction.confirmed
         title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date} - {user_str}'
         body = [f'**{coins[c]}** {self.emoji[c]} ' if coins[c] else '' for c in CURRENCIES]
@@ -128,7 +128,7 @@ class Bank(commands.Cog, name='Bank'):
             for transaction in reversed(
                 session.query(Transaction)
                     .filter_by(account_nr=account_nr)
-                    .order_by(Transaction.transaction_id.desc())
+                    .order_by(Transaction._id.desc())
                     .limit(num+start)
                     .all()[start:num+start]
             ):
@@ -184,7 +184,7 @@ class Bank(commands.Cog, name='Bank'):
     async def bank_delete(self, ctx, transaction_id):
         """Delete a transaction"""
         with self.client.state.get_session() as session:
-            session.query(Transaction).filter_by(transaction_id=transaction_id).delete()
+            session.query(Transaction).filter_by(_id=transaction_id).delete()
         await ctx.send('Success')
 
     @bank.command(
@@ -202,7 +202,7 @@ class Bank(commands.Cog, name='Bank'):
     async def bank_confirm_transaction(self, ctx, transaction_id):
         """Confirm a pending transaction"""
         with self.client.state.get_session() as session:
-            transaction = session.query(Transaction).filter_by(transaction_id=transaction_id).one()
+            transaction = session.query(Transaction).filter_by(_id=transaction_id).one()
             transaction.confirmed = True
         await ctx.send(f'Transaction {transaction_id} confirmed')
 
@@ -215,8 +215,8 @@ class Bank(commands.Cog, name='Bank'):
         """View and control your account `+help account`"""
         with self.client.state.get_session() as session:
             # Check if user exists and create entry if it does not
-            if session.query(User).filter_by(discord_id=ctx.author.id).count() == 0:
-                user = User(discord_id=ctx.author.id, active_char=None)
+            if session.query(User).filter_by(_id=ctx.author.id).count() == 0:
+                user = User(_id=ctx.author.id, active_char=None)
                 session.add(user)
         await self.print_balance(ctx, ctx.author.id)
 
@@ -232,8 +232,8 @@ class Bank(commands.Cog, name='Bank'):
         """
         with self.client.state.get_session() as session:
             # Check if user exists and create entry if it does not
-            if session.query(User).filter_by(discord_id=ctx.author.id).count() == 0:
-                user = User(discord_id=ctx.author.id, active_char=None)
+            if session.query(User).filter_by(_id=ctx.author.id).count() == 0:
+                user = User(_id=ctx.author.id, active_char=None)
                 session.add(user)
             await self.process_transaction(
                 ctx, transaction_string, description, ctx.author.id, confirm=False
@@ -258,7 +258,7 @@ class Bank(commands.Cog, name='Bank'):
             await ctx.send('You can only send positive amounts')
             return
         with self.client.state.get_session() as session:
-            if session.query(User).filter_by(discord_id=receiver.id).count() == 0:
+            if session.query(User).filter_by(_id=receiver.id).count() == 0:
                 await ctx.send('That user does not have an account')
                 return
         await self.process_transaction(
