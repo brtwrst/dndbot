@@ -21,11 +21,18 @@ class EmbedController(commands.Cog, name='EmbedController'):
 
     def construct_embed(self, embed_data):
         content = json.loads(embed_data.content)
+
+        if 'embed' in content:
+            content = content['embed']
+        elif 'embeds' in content:
+            content = content['embeds'][0]
+
         user = self.client.get_user(embed_data.user_id) if embed_data.user_id else None
 
         embed = Embed(
             title=content.get('title', None),
             description=content.get('description', None),
+            url=content.get('url', None),
             color=content.get('color', None) or 0x4f545c,
         )
         for field in content.get('fields', []):
@@ -41,6 +48,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
         if author:
             embed.set_author(
                 name=author.get('name', None),
+                url=author.get('url', None),
                 icon_url=author.get('icon_url', None),
             )
 
