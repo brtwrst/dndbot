@@ -7,9 +7,9 @@ from io import BytesIO
 from datetime import datetime, timezone
 from discord.ext import commands
 from discord.errors import NotFound
-from discord import Embed, TextChannel, File
+from discord import Embed, TextChannel, File, Role
 from sqlalchemy.orm.exc import NoResultFound
-from .utils.state_db import EmbedData
+from .utils.state_db import EmbedData, Quest
 
 
 class EmbedController(commands.Cog, name='EmbedController'):
@@ -42,14 +42,14 @@ class EmbedController(commands.Cog, name='EmbedController'):
                 inline=field.get('inline', False),
             )
         embed.set_footer(
-            text=f'ID: {embed_data._id} | @{user.name if user else ""}'
+            text=f'ID: {embed_data._id}' + (f' | @{user.name}' if user else "")
         )
         author = content.get('author', None)
         if author:
             embed.set_author(
                 name=author.get('name', None),
-                url=author.get('url', None),
-                icon_url=author.get('icon_url', None),
+                url=author.get('url', Embed.Empty),
+                icon_url=author.get('icon_url', Embed.Empty),
             )
 
         return embed
@@ -84,22 +84,29 @@ class EmbedController(commands.Cog, name='EmbedController'):
 
         return message
 
+    async def update_embed(self, embed_id):
+        await self.edit_embed(embed_id, new_content=None)
+
     async def edit_embed(self, embed_id, new_content):
         with self.client.state.get_session() as session:
             embed_data = session.query(EmbedData).filter_by(_id=embed_id).one()
-            embed_data.content = json.dumps(new_content)
+            if new_content:
+                embed_data.content = json.dumps(new_content)
         try:
             channel = self.client.get_channel(embed_data.channel_id)
             if not channel:
                 raise ValueError('Error editing Embed - channel does not exist')
-            message = await channel.fetch_message(embed_data.message_id)
-            if not message:
+            try:
+                message = await channel.fetch_message(embed_data.message_id)
+                if not message:
+                    raise NotFound
+                else:
+                    embed = self.construct_embed(embed_data)
+                    await message.edit(embed=embed)
+                    status = 'Embed updated'
+            except NotFound:
                 message = await self.post_embed(embed_id, embed_data.channel_id)
                 status = 'Embed not found - reposted'
-            else:
-                embed = self.construct_embed(embed_data)
-                await message.edit(embed=embed)
-                status = 'Embed updated'
             return f'{status} {message.jump_url}'
         except Exception as error:
             await self.client.log_error(error, None)
@@ -145,8 +152,8 @@ class EmbedController(commands.Cog, name='EmbedController'):
         return content_dict
 
     @commands.group(
-        name='e',
-        aliases=['embed'],
+        name='embed',
+        aliases=['e'],
         invoke_without_command=True,
     )
     async def embed_base(self, ctx):
@@ -284,6 +291,172 @@ class EmbedController(commands.Cog, name='EmbedController'):
         for i in range(0, len(to_print), 20):
             await ctx.send('\n'.join(to_print[i:i+11]))
 
+class QuestController(commands.Cog, name='QuestController'):
+    def __init__(self, client, embed_controller):
+        self.client = client
+        self.ec = embed_controller
+        self.statuses = {
+            0: 'Offen',
+            1: 'In Progress',
+            2: 'Erfolgreich (Warte auf Bericht)',
+            3: 'Erfolglos (Warte auf Bericht)',
+            4: 'Abgeschlossen',
+        }
+
+    async def cog_check(self, ctx):
+        return self.client.user_is_admin(ctx.author)
+
+    def create_embed_content(self, quest_data):
+        content_dict = {
+            'title': quest_data.title,
+            'fields': [
+              {
+                'name': 'Quest Nummer',
+                'value': f'{quest_data._id}',
+                'inline': True
+              },
+              {
+                'name': 'Datum',
+                'value': f'{quest_data.date}',
+                'inline': True
+              },
+              {
+                'name': 'Multi Session',
+                'value': f'{quest_data.multi}',
+                'inline': True
+              },
+              {
+                'name': 'Tier',
+                'value': f'T{quest_data.tier}',
+                'inline': True
+              },
+              {
+                'name': 'Rang',
+                'value': f'{self.client.mainguild.get_role(quest_data.rank).mention}',
+                'inline': True
+              },
+              {
+                'name': 'Belohnung',
+                'value': f'{quest_data.reward}',
+                'inline': True
+              },
+              {
+                'name': 'Beschreibung',
+                'value': f'{quest_data.description}',
+                'inline': False
+              }
+            ],
+            'author': {
+              'name': f'Status: {self.statuses[quest_data.status]}',
+            }
+        }
+
+        return content_dict
+
+    @commands.group(
+        name='quest',
+        aliases=['q'],
+        invoke_without_command=True,
+    )
+    async def quest_base(self, ctx):
+        pass
+
+    @quest_base.command(
+        name='add',
+    )
+    async def quest_add(
+        self, ctx,
+        _id: int,
+        date: str,
+        multi: str,
+        tier: int,
+        rank: Role,
+        reward: str,
+        title: str,
+        *,
+        description: str,
+    ):
+        quest_data = Quest(
+            _id=_id,
+            embed_id = None,
+            date = date,
+            multi = multi,
+            tier = tier,
+            rank = rank.id,
+            reward = reward,
+            title = title,
+            description = description,
+            status = 0,
+        )
+
+        embed_data = EmbedData(
+            user_id=0,
+            channel_id=0,
+            content=json.dumps(self.create_embed_content(quest_data)),
+            date=datetime.now(tz=timezone.utc).isoformat(),
+            message_id=0,
+            )
+
+        embed_id = self.ec.add_embed_to_db(embed_data)
+
+        with self.client.state.get_session() as session:
+            session.add(quest_data)
+            quest_data.embed_id = embed_id
+
+        await ctx.send(f'Quest added - Embed ID: {embed_id}')
+
+    @quest_base.command(
+        name='edit',
+    )
+    async def quest_edit(
+        self, ctx,
+        _id: int,
+        date: str,
+        multi: str,
+        tier: int,
+        rank: Role,
+        reward: str,
+        title: str,
+        *,
+        description: str,
+    ):
+        with self.client.state.get_session() as session:
+            quest_data = session.query(Quest).filter_by(_id=_id).one()
+
+            quest_data.date = date
+            quest_data.multi = multi
+            quest_data.tier = tier
+            quest_data.rank = rank.id
+            quest_data.reward = reward
+            quest_data.title = title
+            quest_data.description = description
+
+            status = await self.ec.edit_embed(quest_data.embed_id, self.create_embed_content(quest_data))
+            await ctx.send('Quest edited | ' + str(status))
+
+
+    @quest_base.command(
+        name='show',
+    )
+    async def quest_show(self, ctx, quest_id):
+        with self.client.state.get_session() as session:
+            quest_data = session.query(Quest).filter_by(_id=quest_id).one()
+
+        to_print = ['+quest edit']
+        to_print.append(f'"{quest_data._id}"')
+        to_print.append(f'"{quest_data.date}"')
+        to_print.append(f'"{quest_data.multi}"')
+        to_print.append(f'"{quest_data.tier}"')
+        to_print.append(f'"{quest_data.rank}"')
+        to_print.append(f'"{quest_data.reward}"')
+        to_print.append(f'"{quest_data.title}"')
+        to_print.append(f'{quest_data.description}')
+
+        await ctx.send('```\n' + ' '.join(to_print) + '```')
+
+
 
 def setup(client):
-    client.add_cog(EmbedController(client))
+    ec = EmbedController(client)
+    client.add_cog(ec)
+    client.add_cog(QuestController(client, ec))

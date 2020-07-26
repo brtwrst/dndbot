@@ -76,8 +76,9 @@ class Quest(Base):
     tier = Column(Integer, nullable=False)
     rank = Column(Integer, nullable=False)
     reward = Column(String, nullable=False)
+    title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    status = Column(String)
+    status = Column(Integer, nullable=False)
 
     # def __repr__(self):
     #     return f'<Quest({self._id=}, {self.date=}, {self.multi=}, {self.tier=}, {self.rank=}, {self.reward=}, {self.description=})>'
