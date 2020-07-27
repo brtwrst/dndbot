@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from discord.ext import commands
 from discord.utils import get
 from discord import Embed, Member
-from .models.db_core import TransactionData, UserData
+from .models.core import TransactionData, UserData
 
 CURRENCIES = ('platinum', 'gold', 'electrum', 'silver', 'copper')
 CURRENCIES_SHORT = tuple(s[0] for s in CURRENCIES)

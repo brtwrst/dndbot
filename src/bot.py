@@ -7,7 +7,7 @@ from os import path, listdir
 from aiohttp import ClientSession
 from discord import Activity, Message
 from discord.ext.commands import Bot, Context
-from cogs.models.db_core import DBConnector
+from cogs.models.core import DBConnector
 
 
 class Blackwing(Bot):

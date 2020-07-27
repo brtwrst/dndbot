@@ -1,19 +1,21 @@
 # pylint: disable=E0402, E0211, E1101
-from .db_core import DBError, BaseDB, CharacterData
-from .user import UserDB
+from .core import DBError, BaseDB, BaseModel, CharacterData
+from .user_model import UserDB
+
 
 class CharacterDB(BaseDB):
     def __init__(self, client):
         super().__init__(client, model_class=Character)
+        self.UserDB = UserDB(client)
 
     def create_new(self, user_id, name, display_name, picture_url, npc_status, rank=None, level=None):
-        user = UserDB.query_one(_id=user_id)
+        user = self.UserDB.query_one(_id=user_id)
 
         with self.client.state.get_session() as session:
             if session.query(CharacterData).filter_by(user_id=user_id, name=name).count() > 0:
                 raise DBError(f'Character "{name}" already exists for user {user_id}')
 
-        character_data = CharacterData(
+        data = CharacterData(
             user_id=user._id,
             name=name,
             display_name=display_name,
@@ -24,32 +26,24 @@ class CharacterDB(BaseDB):
         )
 
         with self.client.state.get_session() as session:
-            session.add(character_data)
+            session.add(data)
 
-        return self.model_class(self.client, character_data)
+        return self.model_class(self.client, data)
 
-class Character():
-    table_type = 'CharacterData'
 
-    def __init__(self, client, character_data):
-        self.client = client
-        self.data = character_data
+class Character(BaseModel):
+    table_type = CharacterData
 
-    def save_to_db(self):
-        with self.client.state.get_session() as session:
-            session.add(self.data)
-
-    @property
-    def _id(self):
-        return self.data._id
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def user_id(self):
         return self.data.user_id
 
     @user_id.setter
-    def user_id(self, new):
-        self.data.user_id = new
+    def user_id(self, value):
+        self.data.user_id = value
         self.save_to_db()
 
     @property
@@ -57,8 +51,8 @@ class Character():
         return self.data.name
 
     @name.setter
-    def name(self, new):
-        self.data.name = new
+    def name(self, value):
+        self.data.name = value
         self.save_to_db()
 
     @property
@@ -66,8 +60,8 @@ class Character():
         return self.data.display_name
 
     @display_name.setter
-    def display_name(self, new):
-        self.data.display_name = new
+    def display_name(self, value):
+        self.data.display_name = value
         self.save_to_db()
 
     @property
@@ -75,8 +69,8 @@ class Character():
         return self.data.picture_url
 
     @picture_url.setter
-    def picture_url(self, new):
-        self.data.picture_url = new
+    def picture_url(self, value):
+        self.data.picture_url = value
         self.save_to_db()
 
     @property
@@ -84,8 +78,8 @@ class Character():
         return self.data.npc_status
 
     @npc_status.setter
-    def npc_status(self, new):
-        self.data.npc_status = new
+    def npc_status(self, value):
+        self.data.npc_status = value
         self.save_to_db()
 
     @property
@@ -93,8 +87,8 @@ class Character():
         return self.data.rank
 
     @rank.setter
-    def rank(self, new):
-        self.data.rank = new
+    def rank(self, value):
+        self.data.rank = value
         self.save_to_db()
 
     @property
@@ -102,11 +96,6 @@ class Character():
         return self.data.level
 
     @level.setter
-    def level(self, new):
-        self.data.level = new
+    def level(self, value):
+        self.data.level = value
         self.save_to_db()
-
-    def delete(self):
-        with self.client.state.get_session() as session:
-            status = session.query(CharacterData).filter_by(_id=self._id).delete()
-        return status

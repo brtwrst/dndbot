@@ -5,9 +5,9 @@ It will add commands to speak in character.
 from urllib.parse import urlparse
 from discord.ext import commands
 from discord import Embed, DMChannel, Member, Role
-from .models.db_core import DBError
-from .models.character import CharacterDB, UserDB
-from .models.user import UserDB
+from .models.core import DBError
+from .models.character_model import CharacterDB, UserDB
+from .models.user_model import UserDB
 
 
 class InChar(commands.Cog, name='Commands'):
@@ -52,12 +52,9 @@ class InChar(commands.Cog, name='Commands'):
         if not any(parsed.path.lower().endswith(filetype) for filetype in valid_filetypes):
             raise commands.BadArgument('Please only use `' + ' '.join(valid_filetypes) + '`')
 
-        user_id = ctx.author.id
-
         try:
             new_char = self.CharacterDB.create_new(
-                self.client,
-                user_id=user_id,
+                user_id=ctx.author.id,
                 name=charname,
                 display_name=displayname,
                 picture_url=pic_url,
@@ -140,7 +137,7 @@ class InChar(commands.Cog, name='Commands'):
         displayname = char.display_name
         pic_url = char.picture_url
         npc = char.npc_status
-        await ctx.send(f'`+addchar {charname} {displayname} {pic_url} {"npc" if npc else ""}`')
+        await ctx.send(f'`+char add {charname} {displayname} {pic_url} {"npc" if npc else ""}`')
 
     @commands.command(
         name='write',
