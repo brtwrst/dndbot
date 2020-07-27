@@ -7,7 +7,7 @@ from os import path, listdir
 from aiohttp import ClientSession
 from discord import Activity, Message
 from discord.ext.commands import Bot, Context
-from cogs.utils.state_db import State_DB
+from cogs.models.db_core import DBConnector
 
 
 class Blackwing(Bot):
@@ -21,7 +21,7 @@ class Blackwing(Bot):
         self.error_activity = Activity(name='! other Characters (+help)', type=0)
         self.error_string = 'Sorry, something went wrong. We will look into it.'
         self.mainguild = None
-        self.state = State_DB(db_path='sqlite:///../state/state.db.sqlite3')
+        self.state = DBConnector(db_path='sqlite:///../state/state.db.sqlite3')
 
     async def start(self, *args, **kwargs):
         self.session = ClientSession()

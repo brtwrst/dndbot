@@ -5,114 +5,112 @@ It will add commands to speak in character.
 from urllib.parse import urlparse
 from discord.ext import commands
 from discord import Embed, DMChannel, Member, Role
-from .utils.state_db import User, Character
+from .models.db_core import DBError
+from .models.character import CharacterDB, UserDB
+from .models.user import UserDB
 
 
 class InChar(commands.Cog, name='Commands'):
     def __init__(self, client):
         self.client = client
+        self.UserDB = UserDB(client)
+        self.CharacterDB = CharacterDB(client)
 
     def is_admin():
         async def predicate(ctx):
             return ctx.bot.user_is_admin(ctx.author)
         return commands.check(predicate)
 
-    @commands.command(
-        name='addchar',
-        aliases=['add']
+    @commands.group(
+        name='char',
+        aliases=['c'],
+        invoke_without_command=True,
+    )
+    async def char_base(self, ctx, charname=None):
+        user_id = ctx.author.id
+        user = self.UserDB.query_one(_id=user_id)
+
+        if charname is None:
+            user.active_char = None
+        else:
+            char = self.CharacterDB.query_one(user_id=user_id, name=charname)
+            if not char:
+                raise commands.BadArgument('Character {charname} not found')
+            user.active_char = char._id
+
+        await ctx.send(f'Active Character: {charname}')
+
+    @char_base.command(
+        name='add',
     )
     async def addchar(self, ctx, charname, displayname, pic_url, npc=None):
         """Add a character"""
         valid_filetypes = ('.jpg', '.jpeg', '.png')
         parsed = urlparse(pic_url)
         if not parsed.scheme and not parsed.netloc:
-            await ctx.send('Sorry - invalid picture URL')
-            return
+            raise commands.BadArgument('Sorry - invalid picture URL')
         if not any(parsed.path.lower().endswith(filetype) for filetype in valid_filetypes):
-            await ctx.send('Please only use `' + ' '.join(valid_filetypes) + '`')
-            return
+            raise commands.BadArgument('Please only use `' + ' '.join(valid_filetypes) + '`')
+
         user_id = ctx.author.id
-        with self.client.state.get_session() as session:
-            # Check if user exists and create entry if it does not
-            if session.query(User).filter_by(_id=user_id).count() == 0:
-                user = User(_id=user_id, active_char=None)
-                session.add(user)
 
-            # Check if character already exists and can be modified
-            res = session.query(Character).filter_by(_id=user_id, name=charname).all()
-            if res:
-                newchar = res[0]
-                response = 'succesfully modified'
-            else:
-                newchar = Character()
-                response = 'succesfully added'
-            newchar.name = charname
-            newchar.user_id = user_id
-            newchar.display_name = displayname
-            newchar.picture_url = pic_url
-            newchar.npc_status = True if npc else False
-            session.add(newchar)
-        await ctx.send(f'{charname} {response}!')
+        try:
+            new_char = self.CharacterDB.create_new(
+                self.client,
+                user_id=user_id,
+                name=charname,
+                display_name=displayname,
+                picture_url=pic_url,
+                npc_status=True if npc else False,
+            )
+        except DBError as e:
+            await ctx.send(e)
+            return
 
-    @commands.command(
-        name='deletechar',
-        aliases=['delchar', 'removechar', 'remchar', 'rmchar']
+        await ctx.send(f'Character {new_char.name} created successfully!')
+
+    @char_base.command(
+        name='delete',
+        aliases=['del', 'remove'],
     )
     async def delete(self, ctx, charname):
         """Remove a character"""
-        with self.client.state.get_session() as session:
-            a = session.query(Character).filter_by(user_id=ctx.author.id, name=charname).delete()
-        if a:
-            await ctx.send(f'{charname} successfully removed!')
+        char = self.CharacterDB.query_one(user_id=ctx.author.id, name=charname)
+        if not char:
+            raise commands.BadArgument('Character not found')
 
-    @commands.command(
-        name='setrank',
-    )
-    @is_admin()
-    async def setrank(self, ctx, target_user: Member, charname: str, rank: Role = None):
-        """Override a characters rank"""
+        if char.delete() == 1:
+            await ctx.send('Character deleted')
+        else:
+            raise commands.CommandError('Unexpected number of deleted rows')
 
-        user_id = target_user.id
-
-        with self.client.state.get_session() as session:
-            char = session.query(Character).filter_by(user_id=user_id, name=charname).first()
-            if not char:
-                raise commands.BadArgument('Invalid user or charactername')
-            char.rank = rank.id if rank else None
-            session.add(char)
-
-        await ctx.send(f'Rank override saved')
-
-    @commands.command(
+    @char_base.command(
         name='alist',
     )
     @is_admin()
     async def admin_show_chars(self, ctx, target_user: Member):
         """Show all your characters"""
         user_id = target_user.id
-        with self.client.state.get_session() as session:
-            chars = session.query(Character).filter_by(user_id=user_id).all()
-            if not chars:
-                raise commands.BadArgument('No characters found')
+        chars = self.CharacterDB.query_all(user_id=user_id)
+        if not chars:
+            raise commands.BadArgument('No characters found')
 
         to_print = '\n'.join(char.display_name + ' -> ' + char.name for char in chars)
         e = Embed(description='**Display Name -> name**\n\n' + to_print)
         await ctx.send(embed=e)
 
-    @commands.command(
+    @char_base.command(
         name='list',
-        aliases=['listchars'],
+        aliases=['ls'],
     )
     async def show_chars(self, ctx):
         """Show all your characters"""
         user_id = ctx.author.id
-        with self.client.state.get_session() as session:
-            char_list = session.query(Character).filter_by(user_id=user_id).all()
-            active_char_id = session.query(User.active_char).filter_by(
-                _id=user_id).first().active_char
-            active_char = session.query(Character).filter_by(_id=active_char_id).first()
+        user = self.UserDB.query_one(_id=user_id)
+        chars = self.CharacterDB.query_all(user_id=user_id)
+        active_char = self.CharacterDB.query_one(_id=user.active_char)
 
-        list_to_print = '\n'.join(c.name + ' (NPC)' * c.npc_status for c in char_list)
+        list_to_print = '\n'.join(c.name + ' (NPC)' * c.npc_status for c in chars)
         pic_url = ''
         if active_char:
             list_to_print = list_to_print.replace(active_char.name, f'**{active_char.name}**', 1)
@@ -121,36 +119,27 @@ class InChar(commands.Cog, name='Commands'):
         e.set_thumbnail(url=pic_url)
         await ctx.send(embed=e)
 
-    @commands.command(
-        name='char',
-        aliases=['active', 'activechar']
-    )
-    async def char(self, ctx, charname=None):
-        """Select active character"""
-        user_id = ctx.author.id
-        with self.client.state.get_session() as session:
-            char = session.query(Character).filter_by(user_id=user_id, name=charname).first()
-            user = session.query(User).filter_by(_id=user_id).first()
-            if not user:
-                return
-            user.active_char = char._id if char else None
-            session.add(user)
-        await ctx.send(f'Active: {charname}' if user.active_char else 'No active char')
-
-    @commands.command(
+    @char_base.command(
         name='show',
     )
-    async def show(self, ctx, charname):
+    async def show(self, ctx, charname=None):
         """Select active character"""
         user_id = ctx.author.id
-        with self.client.state.get_session() as session:
-            char = session.query(Character).filter_by(user_id=user_id, name=charname).first()
+        if charname is None:
+            user = self.UserDB.query_one(_id=user_id)
+            if user is None or user.active_char is None:
+                raise commands.BadArgument(f'No active character found')
+            char = self.CharacterDB.query_one(_id=user.active_char)
+        else:
+            char = self.CharacterDB.query_one(user_id=user_id, name=charname)
+
         if not char:
-            await ctx.send(f'No character with name {charname} found')
-            return
+            raise commands.BadArgument(f'No character with name {charname} found')
+
+        charname = char.name
+        displayname = char.display_name
         pic_url = char.picture_url
         npc = char.npc_status
-        displayname = char.display_name
         await ctx.send(f'`+addchar {charname} {displayname} {pic_url} {"npc" if npc else ""}`')
 
     @commands.command(
@@ -160,17 +149,15 @@ class InChar(commands.Cog, name='Commands'):
     async def write_in_character(self, ctx, charname, *, user_input=''):
         """Write a message as a specific character"""
         user_id = ctx.author.id
-        with self.client.state.get_session() as session:
-            user = session.query(User).filter_by(_id=user_id).first()
-            char_list = session.query(
-                Character.name, Character._id).filter_by(user_id=user_id).all()
-            if not user or not char_list:
-                return
+        user = self.UserDB.query_one(_id=user_id)
+        chars = self.CharacterDB.query_all(user_id=user_id)
+        if not user or not chars:
+            return
 
         selected_char = None
-        for character_name, character_id in char_list:
-            if character_name.lower().startswith(charname.lower()):
-                selected_char = character_id
+        for character in chars:
+            if character.name.lower().startswith(charname.lower()):
+                selected_char = character.id
                 break
         if selected_char is None:
             # If no char is selected here - try to select the active char
@@ -180,10 +167,10 @@ class InChar(commands.Cog, name='Commands'):
             # If the first word was not a char name it was part of the message
             # and should be reattached to the user input
             user_input = charname + ' ' + user_input
-        with self.client.state.get_session() as session:
-            selected_char = session.query(Character).filter_by(_id=selected_char).first()
-            if not selected_char:
-                return
+
+        selected_char = self.CharacterDB.query_one(_id=selected_char)
+        if not selected_char:
+            return
 
         pic_url = selected_char.picture_url
         guild_ranks = self.client.config['ranks']
@@ -209,6 +196,39 @@ class InChar(commands.Cog, name='Commands'):
         await ctx.send(embed=e)
         if not isinstance(ctx.channel, DMChannel):
             await ctx.message.delete()
+
+    @char_base.group(
+        name='set'
+    )
+    @is_admin()
+    async def set_base(self, ctx):
+        pass
+
+    @set_base.command(
+        name='rank',
+    )
+    @is_admin()
+    async def setrank(self, ctx, target_user: Member, charname: str, rank: Role = None):
+        """Override a characters rank"""
+        char = self.CharacterDB.query_one(user_id=target_user.id, name=charname)
+        if not char:
+            raise commands.BadArgument(f'Character not found')
+
+        char.rank = rank.id
+        await ctx.send(f'Rank override saved')
+
+    @set_base.command(
+        name='level',
+    )
+    @is_admin()
+    async def setlevel(self, ctx, target_user: Member, charname: str, level: int):
+        """Override a characters level"""
+        char = self.CharacterDB.query_one(user_id=target_user.id, name=charname)
+        if not char:
+            raise commands.BadArgument(f'Character not found')
+
+        char.level = level
+        await ctx.send(f'Level set to {level}')
 
 
 def setup(client):

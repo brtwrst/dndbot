@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.errors import NotFound
 from discord import Embed, TextChannel, File, Role
 from sqlalchemy.orm.exc import NoResultFound
-from .utils.state_db import EmbedData, Quest
+from .models.db_core import EmbedData, QuestData
 
 
 class EmbedController(commands.Cog, name='EmbedController'):
@@ -376,7 +376,7 @@ class QuestController(commands.Cog, name='QuestController'):
         *,
         description: str,
     ):
-        quest_data = Quest(
+        quest_data = QuestData(
             _id=_id,
             embed_id = None,
             date = date,
@@ -421,7 +421,7 @@ class QuestController(commands.Cog, name='QuestController'):
         description: str,
     ):
         with self.client.state.get_session() as session:
-            quest_data = session.query(Quest).filter_by(_id=_id).one()
+            quest_data = session.query(QuestData).filter_by(_id=_id).one()
 
             quest_data.date = date
             quest_data.multi = multi
@@ -440,7 +440,7 @@ class QuestController(commands.Cog, name='QuestController'):
     )
     async def quest_show(self, ctx, quest_id):
         with self.client.state.get_session() as session:
-            quest_data = session.query(Quest).filter_by(_id=quest_id).one()
+            quest_data = session.query(QuestData).filter_by(_id=quest_id).one()
 
         to_print = ['+quest edit']
         to_print.append(f'"{quest_data._id}"')
