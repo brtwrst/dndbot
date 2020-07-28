@@ -46,6 +46,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
         invoke_without_command=True,
     )
     async def embed_base(self, ctx):
+        """Add/Change Embeds"""
         pass
 
     @embed_base.command(

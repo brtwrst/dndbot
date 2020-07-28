@@ -25,6 +25,7 @@ class QuestController(commands.Cog, name='QuestController'):
         invoke_without_command=True,
     )
     async def quest_base(self, ctx):
+        """Add/Change Quests"""
         pass
 
     @quest_base.command(
@@ -94,6 +95,7 @@ class QuestController(commands.Cog, name='QuestController'):
         name='show',
     )
     async def quest_show(self, ctx, quest_id):
+        """Show the attributes of a quest"""
         quest = self.QuestDB.query_one(_id=quest_id)
 
         to_print = []

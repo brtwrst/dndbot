@@ -10,7 +10,7 @@ from .models.character_model import CharacterDB, UserDB
 from .models.user_model import UserDB
 
 
-class InChar(commands.Cog, name='Commands'):
+class InChar(commands.Cog, name='InCharacter'):
     def __init__(self, client):
         self.client = client
         self.UserDB = UserDB(client)
@@ -27,6 +27,7 @@ class InChar(commands.Cog, name='Commands'):
         invoke_without_command=True,
     )
     async def char_base(self, ctx, charname=None):
+        """Add/Change Characters `+help char`"""
         user_id = ctx.author.id
         user = self.UserDB.query_one(_id=user_id)
 
@@ -35,7 +36,7 @@ class InChar(commands.Cog, name='Commands'):
         else:
             char = self.CharacterDB.query_one(user_id=user_id, name=charname)
             if not char:
-                raise commands.BadArgument('Character {charname} not found')
+                raise commands.BadArgument(f'Character {charname} not found')
             user.active_char = char._id
 
         await ctx.send(f'Active Character: {charname}')
@@ -65,6 +66,17 @@ class InChar(commands.Cog, name='Commands'):
             return
 
         await ctx.send(f'Character {new_char.name} created successfully!')
+
+    # @char_base.command(
+    #     name='edit',
+    #     aliases=['update']
+    # )
+    # async def quest_edit(self, ctx, quest_id: int, attribute: str, *, value: str):
+    #     value = value.replace('`', '')
+    #     quest = self.QuestDB.query_one(_id=quest_id)
+    #     await quest.edit(attribute, value)
+    #     await ctx.send('Quest updated')
+
 
     @char_base.command(
         name='delete',
@@ -105,6 +117,8 @@ class InChar(commands.Cog, name='Commands'):
         user_id = ctx.author.id
         user = self.UserDB.query_one(_id=user_id)
         chars = self.CharacterDB.query_all(user_id=user_id)
+        if not chars:
+            raise commands.BadArgument('No Characters found')
         active_char = self.CharacterDB.query_one(_id=user.active_char)
 
         list_to_print = '\n'.join(c.name + ' (NPC)' * c.npc_status for c in chars)
@@ -120,7 +134,7 @@ class InChar(commands.Cog, name='Commands'):
         name='show',
     )
     async def show(self, ctx, charname=None):
-        """Select active character"""
+        """Show the attributes of a character"""
         user_id = ctx.author.id
         if charname is None:
             user = self.UserDB.query_one(_id=user_id)
@@ -133,15 +147,22 @@ class InChar(commands.Cog, name='Commands'):
         if not char:
             raise commands.BadArgument(f'No character with name {charname} found')
 
-        charname = char.name
-        displayname = char.display_name
-        pic_url = char.picture_url
-        npc = char.npc_status
-        await ctx.send(f'`+char add {charname} {displayname} {pic_url} {"npc" if npc else ""}`')
+        to_print = []
+        to_print.append(f'**_id:** `{char.user_id}`')
+        to_print.append(f'**name:** `{char.name}`')
+        to_print.append(f'**display_name:** `{char.display_name}`')
+        to_print.append(f'**picture_url:** `{char.picture_url}`')
+        to_print.append(f'**npc_status:** `{"yes" if char.npc_status else "no"}`')
+        char_rank = self.client.mainguild.get_role(char.rank)
+        to_print.append(f'**rank:** `{char_rank.mention if char_rank else None}`')
+        to_print.append(f'**level:** `{char.level}`')
+
+        await ctx.send('\n'.join(to_print))
 
     @commands.command(
         name='write',
-        aliases=['+', 'post']
+        aliases=['+', 'post'],
+        hidden=True,
     )
     async def write_in_character(self, ctx, charname, *, user_input=''):
         """Write a message as a specific character"""
@@ -173,7 +194,7 @@ class InChar(commands.Cog, name='Commands'):
         guild_ranks = self.client.config['ranks']
         color = 0x404040
         if selected_char.rank is not None:
-            color = color = ctx.guild.get_role(selected_char.rank).color
+            color = ctx.guild.get_role(selected_char.rank).color
         elif not selected_char.npc_status and not isinstance(ctx.channel, DMChannel):
             user_roles = [role.id for role in ctx.author.roles]
             for rank in guild_ranks:
