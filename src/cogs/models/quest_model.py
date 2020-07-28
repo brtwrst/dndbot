@@ -69,7 +69,7 @@ class Quest(BaseModel):
 
     @date.setter
     def date(self, value):
-        self.data.date = value
+        self.data.date = str(value)
         self.save_to_db()
 
     @property
@@ -78,7 +78,7 @@ class Quest(BaseModel):
 
     @multi.setter
     def multi(self, value):
-        self.data.multi = value
+        self.data.multi = str(value)
         self.save_to_db()
 
     @property
@@ -105,7 +105,7 @@ class Quest(BaseModel):
 
     @reward.setter
     def reward(self, value):
-        self.data.reward = value
+        self.data.reward = str(value)
         self.save_to_db()
 
     @property
@@ -114,7 +114,7 @@ class Quest(BaseModel):
 
     @title.setter
     def title(self, value):
-        self.data.title = value
+        self.data.title = str(value)
         self.save_to_db()
 
     @property
@@ -123,7 +123,7 @@ class Quest(BaseModel):
 
     @description.setter
     def description(self, value):
-        self.data.description = value
+        self.data.description = str(value)
         self.save_to_db()
 
     @property

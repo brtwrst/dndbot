@@ -67,15 +67,20 @@ class InChar(commands.Cog, name='InCharacter'):
 
         await ctx.send(f'Character {new_char.name} created successfully!')
 
-    # @char_base.command(
-    #     name='edit',
-    #     aliases=['update']
-    # )
-    # async def quest_edit(self, ctx, quest_id: int, attribute: str, *, value: str):
-    #     value = value.replace('`', '')
-    #     quest = self.QuestDB.query_one(_id=quest_id)
-    #     await quest.edit(attribute, value)
-    #     await ctx.send('Quest updated')
+    @char_base.command(
+        name='edit',
+        aliases=['update']
+    )
+    async def char_edit(self, ctx, char_name: str, attribute: str, *, value):
+        if attribute.lower() in ('_id', 'rank'):
+            return
+        value = value.replace('`', '')
+        if value.isdigit():
+            value = int(value)
+        char = self.CharacterDB.query_one(user_id=ctx.author.id, name=char_name)
+        await char.edit(attribute, value)
+        await ctx.send('Character updated')
+
 
 
     @char_base.command(
@@ -148,11 +153,12 @@ class InChar(commands.Cog, name='InCharacter'):
             raise commands.BadArgument(f'No character with name {charname} found')
 
         to_print = []
-        to_print.append(f'**_id:** `{char.user_id}`')
+        # to_print.append(f'**id:** `{char._id}`')
+        to_print.append(f'Character Information:')
         to_print.append(f'**name:** `{char.name}`')
         to_print.append(f'**display_name:** `{char.display_name}`')
         to_print.append(f'**picture_url:** `{char.picture_url}`')
-        to_print.append(f'**npc_status:** `{"yes" if char.npc_status else "no"}`')
+        to_print.append(f'**npc_status:** `{int(char.npc_status)}`')
         char_rank = self.client.mainguild.get_role(char.rank)
         to_print.append(f'**rank:** `{char_rank.mention if char_rank else None}`')
         to_print.append(f'**level:** `{char.level}`')

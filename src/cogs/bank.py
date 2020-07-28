@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from discord.ext import commands
 from discord.utils import get
 from discord import Embed, Member
-from .models.core import TransactionData
 from .models.transaction_model import TransactionDB
 from .models.character_model import CharacterDB
 

@@ -35,7 +35,7 @@ class Embed(BaseModel):
 
     @user_id.setter
     def user_id(self, value):
-        self.data.user_id = value
+        self.data.user_id = int(value)
         self.save_to_db()
 
     @property
@@ -44,7 +44,7 @@ class Embed(BaseModel):
 
     @channel_id.setter
     def channel_id(self, value):
-        self.data.channel_id = value
+        self.data.channel_id = int(value)
         self.save_to_db()
 
     @property
@@ -53,7 +53,7 @@ class Embed(BaseModel):
 
     @message_id.setter
     def message_id(self, value):
-        self.data.message_id = value
+        self.data.message_id = int(value)
         self.save_to_db()
 
     @property
@@ -62,7 +62,7 @@ class Embed(BaseModel):
 
     @content.setter
     def content(self, value):
-        self.data.content = value
+        self.data.content = str(value)
         self.save_to_db()
 
     @property
@@ -71,7 +71,7 @@ class Embed(BaseModel):
 
     @date.setter
     def date(self, value):
-        self.data.date = value
+        self.data.date = str(value)
         self.save_to_db()
 
     async def get_discord_message(self):

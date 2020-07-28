@@ -53,7 +53,7 @@ class Character(BaseModel):
 
     @user_id.setter
     def user_id(self, value):
-        self.data.user_id = value
+        self.data.user_id = int(value)
         self.save_to_db()
 
     @property
@@ -62,7 +62,7 @@ class Character(BaseModel):
 
     @name.setter
     def name(self, value):
-        self.data.name = value
+        self.data.name = str(value)
         self.save_to_db()
 
     @property
@@ -71,7 +71,7 @@ class Character(BaseModel):
 
     @display_name.setter
     def display_name(self, value):
-        self.data.display_name = value
+        self.data.display_name = str(value)
         self.save_to_db()
 
     @property
@@ -80,7 +80,7 @@ class Character(BaseModel):
 
     @picture_url.setter
     def picture_url(self, value):
-        self.data.picture_url = value
+        self.data.picture_url = str(value)
         self.save_to_db()
 
     @property
@@ -89,7 +89,7 @@ class Character(BaseModel):
 
     @npc_status.setter
     def npc_status(self, value):
-        self.data.npc_status = value
+        self.data.npc_status = bool(value)
         self.save_to_db()
 
     @property
@@ -98,7 +98,7 @@ class Character(BaseModel):
 
     @rank.setter
     def rank(self, value):
-        self.data.rank = value
+        self.data.rank = int(value)
         self.save_to_db()
 
     @property
@@ -107,5 +107,5 @@ class Character(BaseModel):
 
     @level.setter
     def level(self, value):
-        self.data.level = value
+        self.data.level = int(value)
         self.save_to_db()

@@ -87,8 +87,11 @@ class BaseModel:
 
     @_id.setter
     def _id(self, value):
-        self.data._id = value
+        self.data._id = int(value)
         self.save_to_db()
+
+    async def edit(self, attribute, value):
+        setattr(self, attribute, value)
 
 
 class UserData(Base):

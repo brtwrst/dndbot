@@ -43,6 +43,7 @@ class QuestController(commands.Cog, name='QuestController'):
         *,
         description: str,
     ):
+        """Add a quest"""
         try:
             quest = self.QuestDB.create_new(
                 _id=_id,
@@ -73,6 +74,7 @@ class QuestController(commands.Cog, name='QuestController'):
         name='post',
     )
     async def quest_post(self, ctx, quest_id: int, channel: TextChannel = None):
+        """Post a quest embed to a channel"""
         try:
             quest = self.QuestDB.query_one(_id=quest_id)
             embed = self.EmbedDB.query_one(_id=quest.embed_id)
@@ -86,6 +88,7 @@ class QuestController(commands.Cog, name='QuestController'):
         aliases=['update']
     )
     async def quest_edit(self, ctx, quest_id: int, attribute: str, *, value: str):
+        """Edit a quest"""
         value = value.replace('`', '')
         quest = self.QuestDB.query_one(_id=quest_id)
         await quest.edit(attribute, value)
@@ -110,9 +113,19 @@ class QuestController(commands.Cog, name='QuestController'):
         await ctx.send('\n'.join(to_print))
 
     @quest_base.command(
+        name='list',
+    )
+    async def quest_list(self, ctx):
+        """List all quests"""
+        quests = self.QuestDB.query_all()
+
+        await ctx.send('```\n' + ', '.join(str(q._id) for q in quests) + '```')
+
+    @quest_base.command(
         name='delete',
     )
     async def quest_delete(self, ctx, quest_id):
+        """Delete a quest"""
         quest = self.QuestDB.query_one(_id=quest_id)
         if quest:
             if await quest.delete() == 1:
