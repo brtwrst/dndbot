@@ -260,7 +260,7 @@ class Bank(commands.Cog, name='Bank'):
         """View and control your account `+help account`"""
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
-            await ctx.send('No active character found')
+            raise commands.BadArgument('No active character found')
         await self.print_balance(ctx, character._id)
 
     @account.command(
@@ -275,7 +275,7 @@ class Bank(commands.Cog, name='Bank'):
         """
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
-            await ctx.send('No active character found')
+            raise commands.BadArgument('No active character found')
 
         transaction = await self.create_transaction(
             user_id=ctx.author.id,
@@ -299,7 +299,7 @@ class Bank(commands.Cog, name='Bank'):
         """View your account's transaction history"""
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
-            await ctx.send('No active character found')
+            raise commands.BadArgument('No active character found')
         await self.print_log(ctx, character._id)
 
     # @account.command(
@@ -310,11 +310,11 @@ class Bank(commands.Cog, name='Bank'):
     # ):
     #     """Send Money to another account holder"""
     #     if '-' in transaction_string:
-    #         await ctx.send('You can only send positive amounts')
+    #         raise commands.BadArgument('You can only send positive amounts')
     #         return
     #     with self.client.state.get_session() as session:
     #         if session.query(UserData).filter_by(_id=receiver.id).count() == 0:
-    #             await ctx.send('That user does not have an account')
+    #             raise commands.BadArgument('That user does not have an account')
     #             return
     #     await self.create_transaction(
     #         ctx, transaction_string, description, receiver.id, confirm=False, send=True
