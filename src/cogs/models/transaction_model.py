@@ -1,10 +1,28 @@
 # pylint: disable=E0402, E0211, E1101
-from .core import DBError, BaseDB, BaseModel, TransactionData
+from sqlalchemy.orm.exc import NoResultFound
+from .core import BaseDB, BaseModel, TransactionData
 
 
 class TransactionDB(BaseDB):
     def __init__(self, client):
-        super().__init__(client, model_class=Character)
+        super().__init__(client, model_class=Transaction)
+
+    def get_history_for_account(self, receiver_id, num=10, start=0):
+        with self.client.state.get_session() as session:
+            try:
+                data = (
+                    session.query(TransactionData)
+                    .filter_by(receiver_id=receiver_id)
+                    .order_by(TransactionData._id.desc())
+                    .limit(num+start)
+                    .all()[start:num+start]
+                )
+            except NoResultFound:
+                return None
+        if len(data) == 0:
+            return None
+        else:
+            return reversed(tuple(self.model_class(self.client, d) for d in data))
 
     def create_new(self, date, user_id, receiver_id, sender_id, description=None, confirmed=0, platinum=None, electrum=None, gold=None, silver=None, copper=None):
         data = TransactionData(
@@ -27,7 +45,7 @@ class TransactionDB(BaseDB):
         return self.model_class(self.client, data)
 
 
-class Character(BaseModel):
+class Transaction(BaseModel):
     table_type = TransactionData
 
     def __init__(self, *args, **kwargs):

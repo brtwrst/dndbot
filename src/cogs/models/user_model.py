@@ -1,6 +1,6 @@
 # pylint: disable=E0402, E0211, E1101
-from .core import DBError, BaseDB, BaseModel, UserData
 from sqlalchemy.orm.exc import NoResultFound
+from .core import DBError, BaseDB, BaseModel, UserData
 
 
 class UserDB(BaseDB):

@@ -8,6 +8,7 @@ from discord.utils import get
 from discord import Embed, Member
 from .models.core import TransactionData
 from .models.transaction_model import TransactionDB
+from .models.character_model import CharacterDB
 
 CURRENCIES = ('platinum', 'gold', 'electrum', 'silver', 'copper')
 CURRENCIES_SHORT = tuple(s[0] for s in CURRENCIES)
@@ -22,6 +23,7 @@ class Bank(commands.Cog, name='Bank'):
         except (TypeError, AttributeError):
             self.emoji = None
         self.TransactionDB = TransactionDB(client)
+        self.CharacterDB = CharacterDB(client)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -36,13 +38,12 @@ class Bank(commands.Cog, name='Bank'):
 
     def get_balance(self, account):
         coins = {c: 0 for c in CURRENCIES}
-        with self.client.state.get_session() as session:
-            for transaction in self.TransactionDB.query_all(
-                receiver_id=account,
-                confirmed=True
-            ):
-                for c in CURRENCIES:
-                    coins[c] += getattr(transaction, c) or 0
+        for transaction in self.TransactionDB.query_all(
+            receiver_id=account,
+            confirmed=True
+        ):
+            for c in CURRENCIES:
+                coins[c] += getattr(transaction, c) or 0
         return coins
 
     async def print_balance(self, ctx, account):
@@ -52,40 +53,43 @@ class Bank(commands.Cog, name='Bank'):
         e.add_field(name='Your Balance', value=' | '.join(coins_string))
         await ctx.send(embed=e)
 
-    def format_transaction(self, transaction, show_receiver=False):
+    def format_transaction(self, transaction):
         coins = {
             c: getattr(transaction, c) if getattr(transaction, c) else 0 for c in CURRENCIES
         }
         date = transaction.date.split('.')[0].replace('T', ' ') + ' UTC'
-        user = self.client.get_user(transaction.user_id)
-        user_str = user.name + '#' + user.discriminator
+        # user = self.client.get_user(transaction.user_id)
+        # user_str = user.name + '#' + user.discriminator
         description = transaction.description
         transaction_id = transaction._id
         confirmed = transaction.confirmed
-        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date} - {user_str}'
+        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date}'#  - {user_str}'
         body = [f'**{coins[c]}** {self.emoji[c]} ' if coins[c] else '' for c in CURRENCIES]
-        if show_receiver:
-            receiver = self.client.get_user(transaction.account_nr)
-            body.append(f'\nAn: {receiver.name + "#" + receiver.discriminator}')
+        receiver = self.CharacterDB.query_one(_id=transaction.receiver_id)
+        if transaction.sender_id == transaction.receiver_id:
+            body.append(f'\nEin/Auszahlung: {receiver.display_name}')
+        else:
+            sender = self.CharacterDB.query_one(_id=transaction.sender_id)
+            body.append(f'\nVon: {sender.display_name}')
+            body.append(f'\nAn: {receiver.display_name}')
         body.append(f'\nZweck: {description}')
 
         return (title, ''.join(body))
 
-    async def process_transaction(
-        self, ctx, transaction_string, description, sender_id, receiver_id, confirm
+    async def create_transaction(
+        self, user_id, transaction_string, description, sender_id, receiver_id, confirm
     ):
         if not description or not transaction_string:
-            await ctx.send('Please provide a transaction string and a description')
-            return
+            raise commands.BadArgument('Please provide a transaction string and a description')
 
         for c in transaction_string:
             if (c not in ',+-1234567890') and (c not in CURRENCIES_SHORT):
-                await ctx.send('Invalid character in transaction ' + c)
-                return
+                raise commands.BadArgument('Invalid character in transaction ' + c)
+
 
         transaction = self.TransactionDB.create_new(
             date=datetime.now(tz=timezone.utc).isoformat(),
-            user_id=ctx.author.id,
+            user_id=user_id,
             receiver_id=receiver_id,
             sender_id=sender_id,
             description=description,
@@ -103,18 +107,18 @@ class Bank(commands.Cog, name='Bank'):
             amount = int(coinstring[:-1])
             currency = coinstring[-1:]
             if currency not in CURRENCIES_SHORT:
-                await ctx.send('Invalid currency detected:' + currency)
-                return
+                raise commands.BadArgument('Invalid currency detected:' + currency)
+
             currency = CURRENCIES[CURRENCIES_SHORT.index(currency)]
             setattr(transaction, currency, amount)
 
         if sender_id != receiver_id:
             transaction2 = self.TransactionDB.create_new(
                 date=datetime.now(tz=timezone.utc).isoformat(),
-                user_id=ctx.author.id,
+                user_id=user_id,
                 receiver_id=sender_id,
                 sender_id=sender_id,
-                description=description,
+                description='AUTO GENERATED because of {transaction._id}\n' + description,
                 confirmed=confirm,
                 platinum=None,
                 electrum=None,
@@ -126,32 +130,27 @@ class Bank(commands.Cog, name='Bank'):
                 amount = getattr(transaction, currency)
                 if amount:
                     setattr(transaction2, currency, amount*-1)
-        e = Embed(
-            title='Transaction added' + (' (pending confirmation)' * (not confirm)),
-            description='\n'.join(self.format_transaction(transaction))
-        )
-        await ctx.send(embed=e)
 
-    async def print_log(self, ctx, start, num, account_nr):
+        return transaction
+
+    async def print_log(self, ctx, receiver_id):
         e = Embed(title='Transaction Log')
-        with self.client.state.get_session() as session:
-            for transaction in reversed(
-                session.query(TransactionData)
-                    .filter_by(account_nr=account_nr)
-                    .order_by(TransactionData._id.desc())
-                    .limit(num+start)
-                    .all()[start:num+start]
-            ):
-                title, body = self.format_transaction(transaction)
-                e.add_field(inline=False, name=title, value=body)
+        transactions = self.TransactionDB.get_history_for_account(receiver_id=receiver_id)
+        if not transactions:
+            raise commands.BadArgument('No Transactions')
+        for transaction in transactions:
+            title, body = self.format_transaction(transaction)
+            e.add_field(inline=False, name=title, value=body)
         await ctx.send(embed=e)
 
     async def print_pending(self, ctx):
         e = Embed(title='Pending Transactions')
-        with self.client.state.get_session() as session:
-            for transaction in session.query(TransactionData).filter_by(confirmed=0).all():
-                title, body = self.format_transaction(transaction, show_receiver=True)
-                e.add_field(inline=False, name=title, value=body)
+        transactions = self.TransactionDB.query_all(confirmed=0)
+        if not transactions:
+            raise commands.BadArgument('No Pending Transactions')
+        for transaction in transactions:
+            title, body = self.format_transaction(transaction)
+            e.add_field(inline=False, name=title, value=body)
         await ctx.send(embed=e)
 
     @commands.group(
@@ -175,16 +174,34 @@ class Bank(commands.Cog, name='Bank'):
         example `+bank 2g,5s Donation from Dora`
         example `+bank -2g,-5s Bought food for the kitchen`
         """
-        await self.process_transaction(ctx, transaction_string, description, 0, confirm=True)
+        transaction = await self.create_transaction(
+            user_id=ctx.author.id,
+            transaction_string=transaction_string,
+            description=description,
+            sender_id=0,
+            receiver_id=0,
+            confirm=True
+        )
+        e = Embed(
+            title=f'Transaction added to Bank',
+            description='\n'.join(self.format_transaction(transaction))
+        )
+        await ctx.send(embed=e)
 
     @bank.command(
         name='history',
         aliases=['log'],
     )
     @is_admin()
-    async def bank_history(self, ctx, start=0, num=10, member: Member = None):
+    async def bank_history(self, ctx, user: Member=None, character_name=None):
         """View the bank transaction history"""
-        await self.print_log(ctx, start, num, member.id if member else 0)
+        character = None
+        if user:
+            if character_name:
+                character = self.CharacterDB.query_one(user_id=user.id, name=character_name)
+            else:
+                character = self.CharacterDB.query_active_char(user_id=user.id)
+        await self.print_log(ctx, character._id if character else 0)
 
     @bank.command(
         name='delete',
@@ -193,8 +210,8 @@ class Bank(commands.Cog, name='Bank'):
     @is_admin()
     async def bank_delete(self, ctx, transaction_id):
         """Delete a transaction"""
-        with self.client.state.get_session() as session:
-            session.query(TransactionData).filter_by(_id=transaction_id).delete()
+        transaction = self.TransactionDB.query_one(_id=transaction_id)
+        await transaction.delete()
         await ctx.send('Success')
 
     @bank.command(
@@ -209,12 +226,31 @@ class Bank(commands.Cog, name='Bank'):
         name='confirm',
     )
     @is_admin()
-    async def bank_confirm_transaction(self, ctx, transaction_id):
+    async def bank_confirm_transaction(self, ctx, transaction_ids: commands.Greedy[int]):
         """Confirm a pending transaction"""
-        with self.client.state.get_session() as session:
-            transaction = session.query(TransactionData).filter_by(_id=transaction_id).one()
+        result = []
+        for transaction_id in transaction_ids:
+            transaction = self.TransactionDB.query_one(_id=transaction_id)
+            if not transaction:
+                continue
+            if transaction.confirmed:
+                result.append(f'{transaction_id} was already confirmed')
+                continue
             transaction.confirmed = True
-        await ctx.send(f'Transaction {transaction_id} confirmed')
+            result.append(f'{transaction_id} confirmed')
+        await ctx.send('```\n' + '\n'.join(result) + '```')
+
+    @bank.command(
+        name='transaction',
+    )
+    @is_admin()
+    async def bank_show_transaction(self, ctx, transaction_id):
+        """Display a specific transaction"""
+        transaction = self.TransactionDB.query_one(_id=transaction_id)
+        e = Embed(title=f'Transaction {transaction_id}')
+        title, body = self.format_transaction(transaction)
+        e.add_field(inline=False, name=title, value=body)
+        await ctx.send(embed=e)
 
     @commands.group(
         name='account',
@@ -223,12 +259,10 @@ class Bank(commands.Cog, name='Bank'):
     )
     async def account(self, ctx):
         """View and control your account `+help account`"""
-        with self.client.state.get_session() as session:
-            # Check if user exists and create entry if it does not
-            if session.query(UserData).filter_by(_id=ctx.author.id).count() == 0:
-                user = UserData(_id=ctx.author.id, active_char=None)
-                session.add(user)
-        await self.print_balance(ctx, ctx.author.id)
+        character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
+        if not character:
+            await ctx.send('No active character found')
+        await self.print_balance(ctx, character._id)
 
     @account.command(
         name='add',
@@ -240,40 +274,52 @@ class Bank(commands.Cog, name='Bank'):
         example `+bank 2g,5s Pay for last mission`
         example `+bank -2g,-5s Bought food for the kitchen`
         """
-        with self.client.state.get_session() as session:
-            # Check if user exists and create entry if it does not
-            if session.query(UserData).filter_by(_id=ctx.author.id).count() == 0:
-                user = UserData(_id=ctx.author.id, active_char=None)
-                session.add(user)
-            await self.process_transaction(
-                ctx, transaction_string, description, ctx.author.id, confirm=False
-            )
+        character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
+        if not character:
+            await ctx.send('No active character found')
+
+        transaction = await self.create_transaction(
+            user_id=ctx.author.id,
+            transaction_string=transaction_string,
+            description=description,
+            sender_id=character._id,
+            receiver_id=character._id,
+            confirm=False
+        )
+        e = Embed(
+            title=f'Transaction added to account of {character.name}',
+            description='\n'.join(self.format_transaction(transaction))
+        )
+        await ctx.send(embed=e)
 
     @account.command(
         name='history',
         aliases=['log'],
     )
-    async def account_history(self, ctx, start=0, num=10):
+    async def account_history(self, ctx):
         """View your account's transaction history"""
-        await self.print_log(ctx, start, num, ctx.author.id)
+        character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
+        if not character:
+            await ctx.send('No active character found')
+        await self.print_log(ctx, character._id)
 
-    @account.command(
-        name='send',
-    )
-    async def account_send_money(
-        self, ctx, receiver: Member, transaction_string=None, *, description=None
-    ):
-        """Send Money to another account holder"""
-        if '-' in transaction_string:
-            await ctx.send('You can only send positive amounts')
-            return
-        with self.client.state.get_session() as session:
-            if session.query(UserData).filter_by(_id=receiver.id).count() == 0:
-                await ctx.send('That user does not have an account')
-                return
-        await self.process_transaction(
-            ctx, transaction_string, description, receiver.id, confirm=False, send=True
-        )
+    # @account.command(
+    #     name='send',
+    # )
+    # async def account_send_money(
+    #     self, ctx, receiver: Member, transaction_string=None, *, description=None
+    # ):
+    #     """Send Money to another account holder"""
+    #     if '-' in transaction_string:
+    #         await ctx.send('You can only send positive amounts')
+    #         return
+    #     with self.client.state.get_session() as session:
+    #         if session.query(UserData).filter_by(_id=receiver.id).count() == 0:
+    #             await ctx.send('That user does not have an account')
+    #             return
+    #     await self.create_transaction(
+    #         ctx, transaction_string, description, receiver.id, confirm=False, send=True
+    #     )
 
 
 def setup(client):

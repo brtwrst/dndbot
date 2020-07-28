@@ -49,8 +49,6 @@ class BaseDB:
                 return None
         if len(data) == 0:
             return None
-        elif len(data) == 0:
-            return self.model_class(self.client, data[0])
         else:
             return tuple(self.model_class(self.client, d) for d in data)
 
@@ -62,8 +60,6 @@ class BaseDB:
                 return None
         if len(data) == 0:
             return None
-        elif len(data) == 0:
-            return self.model_class(self.client, data[0])
         else:
             return tuple(self.model_class(self.client, d) for d in data)
 

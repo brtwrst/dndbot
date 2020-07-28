@@ -8,6 +8,16 @@ class CharacterDB(BaseDB):
         super().__init__(client, model_class=Character)
         self.UserDB = UserDB(client)
 
+    def query_active_char(self, user_id):
+        user = self.UserDB.query_one(_id=user_id)
+        if not user.active_char:
+            return None
+        character = self.query_one(_id=user.active_char)
+        if not character:
+            user.active_char = None
+
+        return character
+
     def create_new(self, user_id, name, display_name, picture_url, npc_status, rank=None, level=None):
         user = self.UserDB.query_one(_id=user_id)
 
