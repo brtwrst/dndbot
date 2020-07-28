@@ -43,5 +43,5 @@ class User(BaseModel):
 
     @active_char.setter
     def active_char(self, value):
-        self.data.active_char = int(value)
+        self.data.active_char = value
         self.save_to_db()

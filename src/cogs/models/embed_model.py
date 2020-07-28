@@ -30,33 +30,6 @@ class Embed(BaseModel):
         super().__init__(*args, **kwargs)
 
     @property
-    def user_id(self):
-        return self.data.user_id
-
-    @user_id.setter
-    def user_id(self, value):
-        self.data.user_id = int(value)
-        self.save_to_db()
-
-    @property
-    def channel_id(self):
-        return self.data.channel_id
-
-    @channel_id.setter
-    def channel_id(self, value):
-        self.data.channel_id = int(value)
-        self.save_to_db()
-
-    @property
-    def message_id(self):
-        return self.data.message_id
-
-    @message_id.setter
-    def message_id(self, value):
-        self.data.message_id = int(value)
-        self.save_to_db()
-
-    @property
     def content(self):
         return self.data.content
 
@@ -73,6 +46,34 @@ class Embed(BaseModel):
     def date(self, value):
         self.data.date = str(value)
         self.save_to_db()
+
+    @property
+    def user_id(self):
+        return self.data.user_id
+
+    @user_id.setter
+    def user_id(self, value):
+        self.data.user_id = value
+        self.save_to_db()
+
+    @property
+    def channel_id(self):
+        return self.data.channel_id
+
+    @channel_id.setter
+    def channel_id(self, value):
+        self.data.channel_id = value
+        self.save_to_db()
+
+    @property
+    def message_id(self):
+        return self.data.message_id
+
+    @message_id.setter
+    def message_id(self, value):
+        self.data.message_id = value
+        self.save_to_db()
+
 
     async def get_discord_message(self):
         if not self.message_id or not self.channel_id:

@@ -55,15 +55,6 @@ class Quest(BaseModel):
         return status
 
     @property
-    def embed_id(self):
-        return self.data.embed_id
-
-    @embed_id.setter
-    def embed_id(self, value):
-        self.data.embed_id = int(value)
-        self.save_to_db()
-
-    @property
     def date(self):
         return self.data.date
 
@@ -133,6 +124,15 @@ class Quest(BaseModel):
     @status.setter
     def status(self, value):
         self.data.status = int(value)
+        self.save_to_db()
+
+    @property
+    def embed_id(self):
+        return self.data.embed_id
+
+    @embed_id.setter
+    def embed_id(self, value):
+        self.data.embed_id = value
         self.save_to_db()
 
     async def edit(self, attribute, value):

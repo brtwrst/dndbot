@@ -98,7 +98,7 @@ class Character(BaseModel):
 
     @rank.setter
     def rank(self, value):
-        self.data.rank = int(value)
+        self.data.rank = value
         self.save_to_db()
 
     @property
@@ -107,5 +107,5 @@ class Character(BaseModel):
 
     @level.setter
     def level(self, value):
-        self.data.level = int(value)
+        self.data.level = value
         self.save_to_db()

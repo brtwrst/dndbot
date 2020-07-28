@@ -84,7 +84,7 @@ class Transaction(BaseModel):
 
     @sender_id.setter
     def sender_id(self, value):
-        self.data.sender_id = int(value)
+        self.data.sender_id = value
         self.save_to_db()
 
     @property
@@ -93,7 +93,7 @@ class Transaction(BaseModel):
 
     @description.setter
     def description(self, value):
-        self.data.description = str(value)
+        self.data.description = value
         self.save_to_db()
 
     @property
@@ -102,7 +102,7 @@ class Transaction(BaseModel):
 
     @confirmed.setter
     def confirmed(self, value):
-        self.data.confirmed = bool(value)
+        self.data.confirmed = value
         self.save_to_db()
 
     @property
@@ -111,7 +111,7 @@ class Transaction(BaseModel):
 
     @platinum.setter
     def platinum(self, value):
-        self.data.platinum = int(value)
+        self.data.platinum = value
         self.save_to_db()
 
     @property
@@ -120,7 +120,7 @@ class Transaction(BaseModel):
 
     @electrum.setter
     def electrum(self, value):
-        self.data.electrum = int(value)
+        self.data.electrum = value
         self.save_to_db()
 
     @property
@@ -129,7 +129,7 @@ class Transaction(BaseModel):
 
     @gold.setter
     def gold(self, value):
-        self.data.gold = int(value)
+        self.data.gold = value
         self.save_to_db()
 
     @property
@@ -138,7 +138,7 @@ class Transaction(BaseModel):
 
     @silver.setter
     def silver(self, value):
-        self.data.silver = int(value)
+        self.data.silver = value
         self.save_to_db()
 
     @property
@@ -147,5 +147,5 @@ class Transaction(BaseModel):
 
     @copper.setter
     def copper(self, value):
-        self.data.copper = int(value)
+        self.data.copper = value
         self.save_to_db()
