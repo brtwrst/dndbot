@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from discord.ext import commands
 from discord.utils import get
 from discord import Embed, Member
-from .models.core import TransactionData, UserData
+from .models.core import TransactionData
+from .models.transaction_model import TransactionDB
 
 CURRENCIES = ('platinum', 'gold', 'electrum', 'silver', 'copper')
 CURRENCIES_SHORT = tuple(s[0] for s in CURRENCIES)
@@ -20,6 +21,7 @@ class Bank(commands.Cog, name='Bank'):
                           or c for c in CURRENCIES}
         except (TypeError, AttributeError):
             self.emoji = None
+        self.TransactionDB = TransactionDB(client)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -32,19 +34,19 @@ class Bank(commands.Cog, name='Bank'):
             return ctx.bot.user_is_admin(ctx.author)
         return commands.check(predicate)
 
-    def get_balance(self, account_nr):
+    def get_balance(self, account):
         coins = {c: 0 for c in CURRENCIES}
         with self.client.state.get_session() as session:
-            for transaction in session.query(TransactionData).filter_by(
-                account_nr=account_nr,
+            for transaction in self.TransactionDB.query_all(
+                receiver_id=account,
                 confirmed=True
-            ).all():
+            ):
                 for c in CURRENCIES:
                     coins[c] += getattr(transaction, c) or 0
         return coins
 
-    async def print_balance(self, ctx, account_nr):
-        coins = self.get_balance(account_nr)
+    async def print_balance(self, ctx, account):
+        coins = self.get_balance(account)
         e = Embed()
         coins_string = [f'{v} {self.emoji[k]}' for k, v in coins.items()]
         e.add_field(name='Your Balance', value=' | '.join(coins_string))
@@ -70,7 +72,7 @@ class Bank(commands.Cog, name='Bank'):
         return (title, ''.join(body))
 
     async def process_transaction(
-        self, ctx, transaction_string, description, account_nr, confirm, send=False
+        self, ctx, transaction_string, description, sender_id, receiver_id, confirm
     ):
         if not description or not transaction_string:
             await ctx.send('Please provide a transaction string and a description')
@@ -81,7 +83,20 @@ class Bank(commands.Cog, name='Bank'):
                 await ctx.send('Invalid character in transaction ' + c)
                 return
 
-        transaction = TransactionData()
+        transaction = self.TransactionDB.create_new(
+            date=datetime.now(tz=timezone.utc).isoformat(),
+            user_id=ctx.author.id,
+            receiver_id=receiver_id,
+            sender_id=sender_id,
+            description=description,
+            confirmed=confirm,
+            platinum=None,
+            electrum=None,
+            gold=None,
+            silver=None,
+            copper=None
+        )
+
         split = transaction_string.split(',')
 
         for coinstring in split:
@@ -93,29 +108,24 @@ class Bank(commands.Cog, name='Bank'):
             currency = CURRENCIES[CURRENCIES_SHORT.index(currency)]
             setattr(transaction, currency, amount)
 
-        transaction.description = description
-        transaction.user_id = ctx.author.id
-        transaction.account_nr = account_nr
-        transaction.confirmed = confirm
-        transaction.date = datetime.now(tz=timezone.utc).isoformat()
-
-        with self.client.state.get_session() as session:
-            session.add(transaction)
-
-        if send:
-            transaction2 = TransactionData()
+        if sender_id != receiver_id:
+            transaction2 = self.TransactionDB.create_new(
+                date=datetime.now(tz=timezone.utc).isoformat(),
+                user_id=ctx.author.id,
+                receiver_id=sender_id,
+                sender_id=sender_id,
+                description=description,
+                confirmed=confirm,
+                platinum=None,
+                electrum=None,
+                gold=None,
+                silver=None,
+                copper=None
+            )
             for currency in CURRENCIES:
-                if getattr(transaction, currency):
+                amount = getattr(transaction, currency)
+                if amount:
                     setattr(transaction2, currency, amount*-1)
-            transaction2.description = description
-            transaction2.user_id = ctx.author.id
-            transaction2.account_nr = ctx.author.id
-            transaction2.confirmed = confirm
-            transaction2.date = datetime.now(tz=timezone.utc).isoformat()
-
-            with self.client.state.get_session() as session:
-                session.add(transaction2)
-
         e = Embed(
             title='Transaction added' + (' (pending confirmation)' * (not confirm)),
             description='\n'.join(self.format_transaction(transaction))

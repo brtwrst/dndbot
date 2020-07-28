@@ -122,14 +122,15 @@ class CharacterData(Base):
 
 
 class TransactionData(Base):
-    __tablename__ = 'transactions'
+    __tablename__ = 'bank_transactions'
 
     _id = Column('id', Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)
-    account_nr = Column(Integer, nullable=False)
-    description = Column(String, nullable=False)
     date = Column(String, nullable=False)
-    confirmed = Column(Boolean, nullable=False)
+    user_id = Column(Integer, nullable=False)
+    receiver_id = Column(Integer, nullable=False)
+    sender_id = Column(Integer)
+    description = Column(String)
+    confirmed = Column(Boolean)
     platinum = Column(Integer)
     electrum = Column(Integer)
     gold = Column(Integer)
