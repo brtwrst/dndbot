@@ -121,7 +121,7 @@ class CharacterData(Base):
 
 
 class TransactionData(Base):
-    __tablename__ = 'bank_transactions'
+    __tablename__ = 'transactions'
 
     _id = Column('id', Integer, primary_key=True, autoincrement=True)
     date = Column(String, nullable=False)
@@ -135,6 +135,7 @@ class TransactionData(Base):
     gold = Column(Integer)
     silver = Column(Integer)
     copper = Column(Integer)
+    linked = Column(Integer)
 
     # def __repr__(self):
     #     return f'<TransactionData({self._id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'

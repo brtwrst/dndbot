@@ -24,7 +24,7 @@ class TransactionDB(BaseDB):
         else:
             return reversed(tuple(self.model_class(self.client, d) for d in data))
 
-    def create_new(self, date, user_id, receiver_id, sender_id, description=None, confirmed=0, platinum=None, electrum=None, gold=None, silver=None, copper=None):
+    def create_new(self, date, user_id, receiver_id, sender_id, description=None, confirmed=0, platinum=None, electrum=None, gold=None, silver=None, copper=None, linked=None):
         data = TransactionData(
             date=date,
             user_id=user_id,
@@ -37,6 +37,7 @@ class TransactionDB(BaseDB):
             gold=gold,
             silver=silver,
             copper=copper,
+            linked=linked,
         )
 
         with self.client.state.get_session() as session:
@@ -50,6 +51,14 @@ class Transaction(BaseModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    async def delete(self):
+        with self.client.state.get_session() as session:
+            status = session.query(type(self).table_type).filter_by(_id=self._id).delete()
+            if status == 1:
+                if self.linked:
+                    status += session.query(type(self).table_type).filter_by(_id=self.linked).delete()
+        return status
 
     @property
     def date(self):
@@ -148,4 +157,13 @@ class Transaction(BaseModel):
     @copper.setter
     def copper(self, value):
         self.data.copper = value
+        self.save_to_db()
+
+    @property
+    def linked(self):
+        return self.data.linked
+
+    @linked.setter
+    def linked(self, value):
+        self.data.linked = value
         self.save_to_db()

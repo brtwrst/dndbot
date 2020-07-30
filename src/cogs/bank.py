@@ -62,7 +62,7 @@ class Bank(commands.Cog, name='Bank'):
         description = transaction.description
         transaction_id = transaction._id
         confirmed = transaction.confirmed
-        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date}'#  - {user_str}'
+        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date}'  # - {user_str}'
         body = [f'**{coins[c]}** {self.emoji[c]} ' if coins[c] else '' for c in CURRENCIES]
         receiver = self.CharacterDB.query_one(_id=transaction.receiver_id)
         if transaction.sender_id == transaction.receiver_id:
@@ -85,7 +85,6 @@ class Bank(commands.Cog, name='Bank'):
             if (c not in ',+-1234567890') and (c not in CURRENCIES_SHORT):
                 raise commands.BadArgument('Invalid character in transaction ' + c)
 
-
         transaction = self.TransactionDB.create_new(
             date=datetime.now(tz=timezone.utc).isoformat(),
             user_id=user_id,
@@ -97,7 +96,8 @@ class Bank(commands.Cog, name='Bank'):
             electrum=None,
             gold=None,
             silver=None,
-            copper=None
+            copper=None,
+            linked=None
         )
 
         split = transaction_string.split(',')
@@ -116,19 +116,22 @@ class Bank(commands.Cog, name='Bank'):
                 date=datetime.now(tz=timezone.utc).isoformat(),
                 user_id=user_id,
                 receiver_id=sender_id,
-                sender_id=sender_id,
-                description='AUTO GENERATED because of {transaction._id}\n' + description,
+                sender_id=receiver_id,
+                description=description,
                 confirmed=confirm,
                 platinum=None,
                 electrum=None,
                 gold=None,
                 silver=None,
-                copper=None
+                copper=None,
+                linked=transaction._id,
             )
             for currency in CURRENCIES:
                 amount = getattr(transaction, currency)
                 if amount:
                     setattr(transaction2, currency, amount*-1)
+
+            transaction.linked = transaction2._id
 
         return transaction
 
@@ -192,7 +195,7 @@ class Bank(commands.Cog, name='Bank'):
         aliases=['log'],
     )
     @is_admin()
-    async def bank_history(self, ctx, user: Member=None, character_name=None):
+    async def bank_history(self, ctx, user: Member = None, character_name=None):
         """View the bank transaction history"""
         character = None
         if user:
@@ -210,8 +213,8 @@ class Bank(commands.Cog, name='Bank'):
     async def bank_delete(self, ctx, transaction_id):
         """Delete a transaction"""
         transaction = self.TransactionDB.query_one(_id=transaction_id)
-        await transaction.delete()
-        await ctx.send('Success')
+        status = await transaction.delete()
+        await ctx.send(f'Success - {status} transactions deleted.')
 
     @bank.command(
         name='pending',
@@ -249,6 +252,34 @@ class Bank(commands.Cog, name='Bank'):
         e = Embed(title=f'Transaction {transaction_id}')
         title, body = self.format_transaction(transaction)
         e.add_field(inline=False, name=title, value=body)
+        await ctx.send(embed=e)
+
+    @bank.command(
+        name='send',
+    )
+    async def bank_send_money(
+        self, ctx, receiver_account_nr: int, transaction_string=None, *, description=None
+    ):
+        """Send Money to another account"""
+        if receiver_account_nr == 0:
+            raise commands.BadArgument('You cannot send money to yourself')
+
+        receiver = self.CharacterDB.query_one(_id=receiver_account_nr)
+        if not receiver:
+            raise commands.BadArgument('Receiver not found')
+
+        transaction = await self.create_transaction(
+            user_id=ctx.author.id,
+            transaction_string=transaction_string,
+            description=description,
+            sender_id=0,
+            receiver_id=receiver._id,
+            confirm=True
+        )
+        e = Embed(
+            title=f'Transaction added from Bank to {receiver.name}',
+            description='\n'.join(self.format_transaction(transaction))
+        )
         await ctx.send(embed=e)
 
     @commands.group(
@@ -302,23 +333,40 @@ class Bank(commands.Cog, name='Bank'):
             raise commands.BadArgument('No active character found')
         await self.print_log(ctx, character._id)
 
-    # @account.command(
-    #     name='send',
-    # )
-    # async def account_send_money(
-    #     self, ctx, receiver: Member, transaction_string=None, *, description=None
-    # ):
-    #     """Send Money to another account holder"""
-    #     if '-' in transaction_string:
-    #         raise commands.BadArgument('You can only send positive amounts')
-    #         return
-    #     with self.client.state.get_session() as session:
-    #         if session.query(UserData).filter_by(_id=receiver.id).count() == 0:
-    #             raise commands.BadArgument('That user does not have an account')
-    #             return
-    #     await self.create_transaction(
-    #         ctx, transaction_string, description, receiver.id, confirm=False, send=True
-    #     )
+    @account.command(
+        name='send',
+    )
+    async def account_send_money(
+        self, ctx, receiver_account_nr: int, transaction_string=None, *, description=None
+    ):
+        """Send Money to another account"""
+        if '-' in transaction_string:
+            raise commands.BadArgument('You can only send positive amounts')
+
+        character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
+        if not character:
+            raise commands.BadArgument('No active character found')
+
+        if character._id == receiver_account_nr:
+            raise commands.BadArgument('You cannot send money to yourself')
+
+        receiver = self.CharacterDB.query_one(_id=receiver_account_nr)
+        if not receiver:
+            raise commands.BadArgument('Receiver not found')
+
+        transaction = await self.create_transaction(
+            user_id=ctx.author.id,
+            transaction_string=transaction_string,
+            description=description,
+            sender_id=character._id,
+            receiver_id=receiver._id,
+            confirm=False
+        )
+        e = Embed(
+            title=f'Transaction added from {character.name} to {receiver.name}',
+            description='\n'.join(self.format_transaction(transaction))
+        )
+        await ctx.send(embed=e)
 
 
 def setup(client):

@@ -81,8 +81,6 @@ class InChar(commands.Cog, name='InCharacter'):
         await char.edit(attribute, value)
         await ctx.send('Character updated')
 
-
-
     @char_base.command(
         name='delete',
         aliases=['del', 'remove'],
@@ -153,7 +151,6 @@ class InChar(commands.Cog, name='InCharacter'):
             raise commands.BadArgument(f'No character with name {charname} found')
 
         to_print = []
-        # to_print.append(f'**id:** `{char._id}`')
         to_print.append(f'Character Information:')
         to_print.append(f'**name:** `{char.name}`')
         to_print.append(f'**display_name:** `{char.display_name}`')
@@ -162,6 +159,7 @@ class InChar(commands.Cog, name='InCharacter'):
         char_rank = self.client.mainguild.get_role(char.rank)
         to_print.append(f'**rank:** `{char_rank.mention if char_rank else None}`')
         to_print.append(f'**level:** `{char.level}`')
+        to_print.append(f'**AccountNumber:** `{char._id}`')
 
         await ctx.send('\n'.join(to_print))
 
