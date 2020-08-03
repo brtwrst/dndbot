@@ -13,7 +13,7 @@ class TransactionDB(BaseDB):
                 data = (
                     session.query(TransactionData)
                     .filter_by(receiver_id=receiver_id)
-                    .order_by(TransactionData._id.desc())
+                    .order_by(TransactionData.id.desc())
                     .limit(num+start)
                     .all()[start:num+start]
                 )
@@ -54,10 +54,10 @@ class Transaction(BaseModel):
 
     async def delete(self):
         with self.client.state.get_session() as session:
-            status = session.query(type(self).table_type).filter_by(_id=self._id).delete()
+            status = session.query(type(self).table_type).filter_by(id=self.id).delete()
             if status == 1:
                 if self.linked:
-                    status += session.query(type(self).table_type).filter_by(_id=self.linked).delete()
+                    status += session.query(type(self).table_type).filter_by(id=self.linked).delete()
         return status
 
     @property

@@ -60,15 +60,15 @@ class Bank(commands.Cog, name='Bank'):
         # user = self.client.get_user(transaction.user_id)
         # user_str = user.name + '#' + user.discriminator
         description = transaction.description
-        transaction_id = transaction._id
+        transaction_id = transaction.id
         confirmed = transaction.confirmed
         title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date}'  # - {user_str}'
         body = [f'**{coins[c]}** {self.emoji[c]} ' if coins[c] else '' for c in CURRENCIES]
-        receiver = self.CharacterDB.query_one(_id=transaction.receiver_id)
+        receiver = self.CharacterDB.query_one(id=transaction.receiver_id)
         if transaction.sender_id == transaction.receiver_id:
             body.append(f'\nEin/Auszahlung: {receiver.display_name}')
         else:
-            sender = self.CharacterDB.query_one(_id=transaction.sender_id)
+            sender = self.CharacterDB.query_one(id=transaction.sender_id)
             body.append(f'\nVon: {sender.display_name}')
             body.append(f'\nAn: {receiver.display_name}')
         body.append(f'\nZweck: {description}')
@@ -124,14 +124,14 @@ class Bank(commands.Cog, name='Bank'):
                 gold=None,
                 silver=None,
                 copper=None,
-                linked=transaction._id,
+                linked=transaction.id,
             )
             for currency in CURRENCIES:
                 amount = getattr(transaction, currency)
                 if amount:
                     setattr(transaction2, currency, amount*-1)
 
-            transaction.linked = transaction2._id
+            transaction.linked = transaction2.id
 
         return transaction
 
@@ -203,7 +203,7 @@ class Bank(commands.Cog, name='Bank'):
                 character = self.CharacterDB.query_one(user_id=user.id, name=character_name)
             else:
                 character = self.CharacterDB.query_active_char(user_id=user.id)
-        await self.print_log(ctx, character._id if character else 0)
+        await self.print_log(ctx, character.id if character else 0)
 
     @bank.command(
         name='delete',
@@ -212,7 +212,7 @@ class Bank(commands.Cog, name='Bank'):
     @is_admin()
     async def bank_delete(self, ctx, transaction_id):
         """Delete a transaction"""
-        transaction = self.TransactionDB.query_one(_id=transaction_id)
+        transaction = self.TransactionDB.query_one(id=transaction_id)
         status = await transaction.delete()
         await ctx.send(f'Success - {status} transactions deleted.')
 
@@ -232,7 +232,7 @@ class Bank(commands.Cog, name='Bank'):
         """Confirm a pending transaction"""
         result = []
         for transaction_id in transaction_ids:
-            transaction = self.TransactionDB.query_one(_id=transaction_id)
+            transaction = self.TransactionDB.query_one(id=transaction_id)
             if not transaction:
                 continue
             if transaction.confirmed:
@@ -248,7 +248,7 @@ class Bank(commands.Cog, name='Bank'):
     @is_admin()
     async def bank_show_transaction(self, ctx, transaction_id):
         """Display a specific transaction"""
-        transaction = self.TransactionDB.query_one(_id=transaction_id)
+        transaction = self.TransactionDB.query_one(id=transaction_id)
         e = Embed(title=f'Transaction {transaction_id}')
         title, body = self.format_transaction(transaction)
         e.add_field(inline=False, name=title, value=body)
@@ -264,7 +264,7 @@ class Bank(commands.Cog, name='Bank'):
         if receiver_account_nr == 0:
             raise commands.BadArgument('You cannot send money to yourself')
 
-        receiver = self.CharacterDB.query_one(_id=receiver_account_nr)
+        receiver = self.CharacterDB.query_one(id=receiver_account_nr)
         if not receiver:
             raise commands.BadArgument('Receiver not found')
 
@@ -273,7 +273,7 @@ class Bank(commands.Cog, name='Bank'):
             transaction_string=transaction_string,
             description=description,
             sender_id=0,
-            receiver_id=receiver._id,
+            receiver_id=receiver.id,
             confirm=True
         )
         e = Embed(
@@ -292,7 +292,7 @@ class Bank(commands.Cog, name='Bank'):
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
             raise commands.BadArgument('No active character found')
-        await self.print_balance(ctx, character._id)
+        await self.print_balance(ctx, character.id)
 
     @account.command(
         name='add',
@@ -312,8 +312,8 @@ class Bank(commands.Cog, name='Bank'):
             user_id=ctx.author.id,
             transaction_string=transaction_string,
             description=description,
-            sender_id=character._id,
-            receiver_id=character._id,
+            sender_id=character.id,
+            receiver_id=character.id,
             confirm=False
         )
         e = Embed(
@@ -331,7 +331,7 @@ class Bank(commands.Cog, name='Bank'):
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
             raise commands.BadArgument('No active character found')
-        await self.print_log(ctx, character._id)
+        await self.print_log(ctx, character.id)
 
     @account.command(
         name='send',
@@ -347,10 +347,10 @@ class Bank(commands.Cog, name='Bank'):
         if not character:
             raise commands.BadArgument('No active character found')
 
-        if character._id == receiver_account_nr:
+        if character.id == receiver_account_nr:
             raise commands.BadArgument('You cannot send money to yourself')
 
-        receiver = self.CharacterDB.query_one(_id=receiver_account_nr)
+        receiver = self.CharacterDB.query_one(id=receiver_account_nr)
         if not receiver:
             raise commands.BadArgument('Receiver not found')
 
@@ -358,8 +358,8 @@ class Bank(commands.Cog, name='Bank'):
             user_id=ctx.author.id,
             transaction_string=transaction_string,
             description=description,
-            sender_id=character._id,
-            receiver_id=receiver._id,
+            sender_id=character.id,
+            receiver_id=receiver.id,
             confirm=False
         )
         e = Embed(

@@ -18,7 +18,7 @@ class UserDB(BaseDB):
 
     def create_new(self, _id, active_char=None):
         with self.client.state.get_session() as session:
-            if session.query(UserData).filter_by(_id=_id).count() > 0:
+            if session.query(UserData).filter_by(id=_id).count() > 0:
                 raise DBError(f'User {_id} already exists')
 
         data = UserData(

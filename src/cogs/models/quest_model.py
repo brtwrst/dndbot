@@ -10,7 +10,7 @@ class QuestDB(BaseDB):
 
     def create_new(self, _id, date, multi, tier, rank_id, reward, title, description):
         with self.client.state.get_session() as session:
-            if session.query(self.table_class).filter_by(_id=_id).count() > 0:
+            if session.query(self.table_class).filter_by(id=_id).count() > 0:
                 raise DBError(f'Quest {_id} already exists')
 
         data = QuestData(
@@ -48,9 +48,9 @@ class Quest(BaseModel):
 
     async def delete(self):
         with self.client.state.get_session() as session:
-            status = session.query(type(self).table_type).filter_by(_id=self._id).delete()
+            status = session.query(type(self).table_type).filter_by(id=self.id).delete()
         if status == 1:
-            embed = self.EmbedDB.query_one(_id=self.embed_id)
+            embed = self.EmbedDB.query_one(id=self.embed_id)
             status = await embed.delete()
         return status
 
@@ -140,7 +140,7 @@ class Quest(BaseModel):
         if not self.embed_id:
             return
         try:
-            embed = self.EmbedDB.query_one(_id=self.embed_id)
+            embed = self.EmbedDB.query_one(id=self.embed_id)
             embed.content = self.create_embed_content()
             await embed.update()
         except ModelError:
@@ -152,7 +152,7 @@ class Quest(BaseModel):
             'fields': [
                 {
                     'name': 'Quest Nummer',
-                    'value': f'{self._id}',
+                    'value': f'{self.id}',
                     'inline': True
                 },
                 {

@@ -29,7 +29,7 @@ class InChar(commands.Cog, name='InCharacter'):
     async def char_base(self, ctx, charname=None):
         """Add/Change Characters `+help char`"""
         user_id = ctx.author.id
-        user = self.UserDB.query_one(_id=user_id)
+        user = self.UserDB.query_one(id=user_id)
 
         if charname is None:
             user.active_char = None
@@ -37,7 +37,7 @@ class InChar(commands.Cog, name='InCharacter'):
             char = self.CharacterDB.query_one(user_id=user_id, name=charname)
             if not char:
                 raise commands.BadArgument(f'Character {charname} not found')
-            user.active_char = char._id
+            user.active_char = char.id
 
         await ctx.send(f'Active Character: {charname}')
 
@@ -118,11 +118,11 @@ class InChar(commands.Cog, name='InCharacter'):
     async def show_chars(self, ctx):
         """Show all your characters"""
         user_id = ctx.author.id
-        user = self.UserDB.query_one(_id=user_id)
+        user = self.UserDB.query_one(id=user_id)
         chars = self.CharacterDB.query_all(user_id=user_id)
         if not chars:
             raise commands.BadArgument('No Characters found')
-        active_char = self.CharacterDB.query_one(_id=user.active_char)
+        active_char = self.CharacterDB.query_one(id=user.active_char)
 
         list_to_print = '\n'.join(c.name + ' (NPC)' * c.npc_status for c in chars)
         pic_url = ''
@@ -140,10 +140,10 @@ class InChar(commands.Cog, name='InCharacter'):
         """Show the attributes of a character"""
         user_id = ctx.author.id
         if charname is None:
-            user = self.UserDB.query_one(_id=user_id)
+            user = self.UserDB.query_one(id=user_id)
             if user is None or user.active_char is None:
                 raise commands.BadArgument(f'No active character found')
-            char = self.CharacterDB.query_one(_id=user.active_char)
+            char = self.CharacterDB.query_one(id=user.active_char)
         else:
             char = self.CharacterDB.query_one(user_id=user_id, name=charname)
 
@@ -159,7 +159,7 @@ class InChar(commands.Cog, name='InCharacter'):
         char_rank = self.client.mainguild.get_role(char.rank)
         to_print.append(f'**rank:** `{char_rank.mention if char_rank else None}`')
         to_print.append(f'**level:** `{char.level}`')
-        to_print.append(f'**AccountNumber:** `{char._id}`')
+        to_print.append(f'**AccountNumber:** `{char.id}`')
 
         await ctx.send('\n'.join(to_print))
 
@@ -171,7 +171,7 @@ class InChar(commands.Cog, name='InCharacter'):
     async def write_in_character(self, ctx, charname, *, user_input=''):
         """Write a message as a specific character"""
         user_id = ctx.author.id
-        user = self.UserDB.query_one(_id=user_id)
+        user = self.UserDB.query_one(id=user_id)
         chars = self.CharacterDB.query_all(user_id=user_id)
         if not user or not chars:
             return
@@ -190,7 +190,7 @@ class InChar(commands.Cog, name='InCharacter'):
             # and should be reattached to the user input
             user_input = charname + ' ' + user_input
 
-        selected_char = self.CharacterDB.query_one(_id=selected_char)
+        selected_char = self.CharacterDB.query_one(id=selected_char)
         if not selected_char:
             return
 

@@ -75,7 +75,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
             await ctx.send(e)
             return
 
-        await ctx.send(f'Embed added. ID: {new_embed._id}')
+        await ctx.send(f'Embed added. ID: {new_embed.id}')
         if channel:
             try:
                 message = await new_embed.post()
@@ -90,7 +90,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
     async def embed_post(self, ctx, embed_id, channel: TextChannel = None):
         """Post or repost an embed"""
         try:
-            embed = self.EmbedDB.query_one(_id=embed_id)
+            embed = self.EmbedDB.query_one(id=embed_id)
             message = await embed.post(channel.id if channel else None)
             await ctx.send('Embed Posted ' + message.jump_url)
         except (ModelError, DBError) as e:
@@ -104,7 +104,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
         try:
             content = await self.validate_content(ctx)
 
-            embed = self.EmbedDB.query_one(_id=embed_id)
+            embed = self.EmbedDB.query_one(id=embed_id)
             embed.content = content
             await ctx.send('Embed update successful - trying to update message')
             message = await embed.update()
@@ -119,7 +119,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
     async def embed_print(self, ctx, _id: int):
         """Print the embeds content JSON Object"""
         try:
-            embed = self.EmbedDB.query_one(_id=_id)
+            embed = self.EmbedDB.query_one(id=_id)
 
             if not embed:
                 await ctx.send('Embed ID not found in Database')
@@ -129,7 +129,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
             if len(to_send) > 1000:
                 await ctx.send(file=File(
                     fp=BytesIO(to_send.encode()),
-                    filename=f'Embed_{embed._id}.json'
+                    filename=f'Embed_{embed.id}.json'
                 ))
             else:
                 await ctx.send(f'```\n{to_send}```')
@@ -143,7 +143,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
     async def embed_delete(self, ctx, embed_ids: commands.Greedy[int]):
         statuses = []
         for embed_id in embed_ids:
-            embed = self.EmbedDB.query_one(_id=embed_id)
+            embed = self.EmbedDB.query_one(id=embed_id)
             if embed:
                 status = await embed.remove()
                 statuses.append(f'{embed_id}: ' + status)
@@ -166,11 +166,11 @@ class EmbedController(commands.Cog, name='EmbedController'):
         for embed in embeds:
             message = await embed.get_discord_message()
             if not message:
-                to_print.append(f'{embed._id}: message not found in discord - db updated')
+                to_print.append(f'{embed.id}: message not found in discord - db updated')
                 continue
             channel = message.channel
             title = json.loads(embed.content).get('title', '')
-            to_print.append(f'{embed._id}: {channel.mention} {title} <{message.jump_url}>')
+            to_print.append(f'{embed.id}: {channel.mention} {title} <{message.jump_url}>')
 
         for i in range(0, len(to_print), 11):
             await ctx.send('\n'.join(to_print[i:i+11]))
@@ -196,7 +196,7 @@ class EmbedController(commands.Cog, name='EmbedController'):
     #         for ed in embeds:
     #             title = json.loads(ed.content).get('title', '')
     #             to_print.append(
-    #                 f'ID: {ed._id} | Title: {title} | Created: {ed.date}'
+    #                 f'ID: {ed.id} | Title: {title} | Created: {ed.date}'
     #                 f'{" **Active **" if bool(ed.message_id) else " **Inactive **"}'
     #             )
 

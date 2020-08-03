@@ -64,11 +64,11 @@ class QuestController(commands.Cog, name='QuestController'):
                 message_id=None,
             )
 
-            quest.embed_id = embed._id
+            quest.embed_id = embed.id
         except (DBError, ModelError) as e:
             await ctx.send(e)
 
-        await ctx.send(f'Quest {quest._id} added - Embed ID: {embed._id}')
+        await ctx.send(f'Quest {quest.id} added - Embed ID: {embed.id}')
 
     @quest_base.command(
         name='post',
@@ -76,8 +76,8 @@ class QuestController(commands.Cog, name='QuestController'):
     async def quest_post(self, ctx, quest_id: int, channel: TextChannel = None):
         """Post a quest embed to a channel"""
         try:
-            quest = self.QuestDB.query_one(_id=quest_id)
-            embed = self.EmbedDB.query_one(_id=quest.embed_id)
+            quest = self.QuestDB.query_one(id=quest_id)
+            embed = self.EmbedDB.query_one(id=quest.embed_id)
             message = await embed.post(channel.id if channel else None)
             await ctx.send('Quest Posted ' + message.jump_url)
         except (ModelError, DBError) as e:
@@ -90,7 +90,7 @@ class QuestController(commands.Cog, name='QuestController'):
     async def quest_edit(self, ctx, quest_id: int, attribute: str, *, value: str):
         """Edit a quest"""
         value = value.replace('`', '')
-        quest = self.QuestDB.query_one(_id=quest_id)
+        quest = self.QuestDB.query_one(id=quest_id)
         await quest.edit(attribute, value)
         await ctx.send('Quest updated')
 
@@ -99,7 +99,7 @@ class QuestController(commands.Cog, name='QuestController'):
     )
     async def quest_show(self, ctx, quest_id):
         """Show the attributes of a quest"""
-        quest = self.QuestDB.query_one(_id=quest_id)
+        quest = self.QuestDB.query_one(id=quest_id)
 
         to_print = []
         to_print.append(f'**date:** `{quest.date}`')
@@ -119,14 +119,14 @@ class QuestController(commands.Cog, name='QuestController'):
         """List all quests"""
         quests = self.QuestDB.query_all()
 
-        await ctx.send('```\n' + ', '.join(str(q._id) for q in quests) + '```')
+        await ctx.send('```\n' + ', '.join(str(q.id) for q in quests) + '```')
 
     @quest_base.command(
         name='delete',
     )
     async def quest_delete(self, ctx, quest_id):
         """Delete a quest"""
-        quest = self.QuestDB.query_one(_id=quest_id)
+        quest = self.QuestDB.query_one(id=quest_id)
         if quest:
             if await quest.delete() == 1:
                 await ctx.send(f'Quest {quest_id} deleted')

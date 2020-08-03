@@ -120,7 +120,7 @@ class Embed(BaseModel):
     async def delete(self):
         await self.remove()
         with self.client.state.get_session() as session:
-            status = session.query(type(self).table_type).filter_by(_id=self._id).delete()
+            status = session.query(type(self).table_type).filter_by(id=self.id).delete()
         return status
 
     async def update(self):
@@ -156,7 +156,7 @@ class Embed(BaseModel):
             )
 
         embed.set_footer(
-            text=f'ID: {self._id}' + (f' | @{user.name}' if user else "")
+            text=f'ID: {self.id}' + (f' | @{user.name}' if user else "")
         )
 
         author = content.get('author', None)

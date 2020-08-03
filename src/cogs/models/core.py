@@ -78,16 +78,16 @@ class BaseModel:
 
     async def delete(self):
         with self.client.state.get_session() as session:
-            status = session.query(type(self).table_type).filter_by(_id=self._id).delete()
+            status = session.query(type(self).table_type).filter_by(id=self.id).delete()
         return status
 
     @property
-    def _id(self):
-        return self.data._id
+    def id(self):
+        return self.data.id
 
-    @_id.setter
-    def _id(self, value):
-        self.data._id = int(value)
+    @id.setter
+    def id(self, value):
+        self.data.id = int(value)
         self.save_to_db()
 
     async def edit(self, attribute, value):
@@ -97,17 +97,17 @@ class BaseModel:
 class UserData(Base):
     __tablename__ = 'users'
 
-    _id = Column('id', Integer, primary_key=True, autoincrement=False)
+    id = Column(Integer, primary_key=True, autoincrement=False)
     active_char = Column(Integer)
 
     # def __repr__(self):
-    #     return f'<UserData({self._id=}, {self.active_char=})>'
+    #     return f'<UserData({self.id=}, {self.active_char=})>'
 
 
 class CharacterData(Base):
     __tablename__ = 'characters'
 
-    _id = Column('id', Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
     display_name = Column(String, nullable=False)
@@ -117,13 +117,13 @@ class CharacterData(Base):
     level = Column(Integer)
 
     # def __repr__(self):
-    #     return f'<CharacterData({self._id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank=})>'
+    #     return f'<CharacterData({self.id=}, {self.user_id=}, {self.name=}, {self.display_name=}, {self.picture_url=}, {self.npc_status=}, {self.rank=})>'
 
 
 class TransactionData(Base):
     __tablename__ = 'transactions'
 
-    _id = Column('id', Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     date = Column(String, nullable=False)
     user_id = Column(Integer, nullable=False)
     receiver_id = Column(Integer, nullable=False)
@@ -138,13 +138,13 @@ class TransactionData(Base):
     linked = Column(Integer)
 
     # def __repr__(self):
-    #     return f'<TransactionData({self._id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
+    #     return f'<TransactionData({self.id=}, {self.user_id=}, {self.description=}, {self.date=}, {self.platinum=}, {self.electrum=}, {self.gold=}, {self.silver=}, {self.copper=})>'
 
 
 class EmbedData(Base):
     __tablename__ = 'embeds'
 
-    _id = Column('id', Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     content = Column(String, nullable=False)
     date = Column(String, nullable=False)
     user_id = Column(Integer)
@@ -152,13 +152,13 @@ class EmbedData(Base):
     message_id = Column(Integer)
 
     # def __repr__(self):
-    #     return f'<EmbedData({self._id=}, {self.user_id=}, {self.channel_id=}, {self.message_id=}, {self.content=}, {self.date=})>'
+    #     return f'<EmbedData({self.id=}, {self.user_id=}, {self.channel_id=}, {self.message_id=}, {self.content=}, {self.date=})>'
 
 
 class QuestData(Base):
     __tablename__ = 'quests'
 
-    _id = Column('id', Integer, primary_key=True, autoincrement=False)
+    id = Column(Integer, primary_key=True, autoincrement=False)
     date = Column(String, nullable=False)
     multi = Column(String, nullable=False)
     tier = Column(Integer, nullable=False)
@@ -170,18 +170,18 @@ class QuestData(Base):
     embed_id = Column(Integer)
 
     # def __repr__(self):
-    #     return f'<QuestData({self._id=}, {self.date=}, {self.multi=}, {self.tier=}, {self.rank=}, {self.reward=}, {self.description=})>'
+    #     return f'<QuestData({self.id=}, {self.date=}, {self.multi=}, {self.tier=}, {self.rank=}, {self.reward=}, {self.description=})>'
 
 
 class QuestToCharacter(Base):
     __tablename__ = 'quest_to_character'
 
-    _id = Column('id', Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     quest_id = Column(Integer, nullable=False)
     character_id = Column(Integer, nullable=False)
 
     # def __repr__(self):
-    #     return f'<QuestToCharacter({self._id=}, {self.quest_id=}, {self.character_id=})>'
+    #     return f'<QuestToCharacter({self.id=}, {self.quest_id=}, {self.character_id=})>'
 
 
 class DBConnector():

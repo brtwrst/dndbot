@@ -9,24 +9,24 @@ class CharacterDB(BaseDB):
         self.UserDB = UserDB(client)
 
     def query_active_char(self, user_id):
-        user = self.UserDB.query_one(_id=user_id)
+        user = self.UserDB.query_one(id=user_id)
         if not user.active_char:
             return None
-        character = self.query_one(_id=user.active_char)
+        character = self.query_one(id=user.active_char)
         if not character:
             user.active_char = None
 
         return character
 
     def create_new(self, user_id, name, display_name, picture_url, npc_status, rank=None, level=None):
-        user = self.UserDB.query_one(_id=user_id)
+        user = self.UserDB.query_one(id=user_id)
 
         with self.client.state.get_session() as session:
             if session.query(CharacterData).filter_by(user_id=user_id, name=name).count() > 0:
                 raise DBError(f'Character "{name}" already exists for user {user_id}')
 
         data = CharacterData(
-            user_id=user._id,
+            user_id=user.id,
             name=name,
             display_name=display_name,
             picture_url=picture_url,
