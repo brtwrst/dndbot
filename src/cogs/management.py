@@ -13,7 +13,7 @@ import traceback
 import typing
 from datetime import datetime
 from os import path, listdir
-from discord import Embed
+from discord import Embed, DMChannel
 from discord.ext import commands
 
 
@@ -296,9 +296,14 @@ class Management(commands.Cog, name='Management'):
         )
         response = [f'`Error occured {delta_str}`']
         if error_source is not None:
-            response.append(
-                f'`Server:{error_source.guild.name} | Channel: {error_source.channel.name}`'
-            )
+            if isinstance(error_source.channel, DMChannel):
+                response.append(
+                    f'`Server: NONE | Channel: DMChannel`'
+                )
+            else:
+                response.append(
+                    f'`Server:{error_source.guild.name} | Channel: {error_source.channel.name}`'
+                )
             response.append(
                 f'`User: {error_source.author.name}#{error_source.author.discriminator}`'
             )

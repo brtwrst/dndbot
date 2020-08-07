@@ -197,9 +197,11 @@ class InChar(commands.Cog, name='InCharacter'):
         pic_url = selected_char.picture_url
         guild_ranks = self.client.config['ranks']
         color = 0x404040
-        if selected_char.rank is not None:
+        if isinstance(ctx.channel, DMChannel):
+            pass
+        elif selected_char.rank is not None:
             color = ctx.guild.get_role(selected_char.rank).color
-        elif not selected_char.npc_status and not isinstance(ctx.channel, DMChannel):
+        elif not selected_char.npc_status:
             user_roles = [role.id for role in ctx.author.roles]
             for rank in guild_ranks:
                 if rank in user_roles:
