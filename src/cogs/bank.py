@@ -155,6 +155,19 @@ class Bank(commands.Cog, name='Bank'):
             e.add_field(inline=False, name=title, value=body)
         await ctx.send(embed=e)
 
+    async def confirm_transaction(self, transaction_id, check_linked=True):
+        res = ''
+        transaction = self.TransactionDB.query_one(id=transaction_id)
+        if not transaction:
+            return f'Unknown transaction: {transaction_id}'
+        if transaction.confirmed:
+            return f'Transaction {transaction_id} was already confirmed'
+        transaction.confirmed = True
+        res = f'Confirmed transaction: {transaction_id}'
+        if transaction.linked and check_linked:
+            res += '\n' + await self.confirm_transaction(transaction.linked, check_linked=False)
+        return res
+
     @commands.group(
         name='bank',
         aliases=[],
@@ -213,6 +226,8 @@ class Bank(commands.Cog, name='Bank'):
     async def bank_delete(self, ctx, transaction_id):
         """Delete a transaction"""
         transaction = self.TransactionDB.query_one(id=transaction_id)
+        if not transaction:
+            raise commands.BadArgument('Unknown transaction')
         status = await transaction.delete()
         await ctx.send(f'Success - {status} transactions deleted.')
 
@@ -231,15 +246,10 @@ class Bank(commands.Cog, name='Bank'):
     async def bank_confirm_transaction(self, ctx, transaction_ids: commands.Greedy[int]):
         """Confirm a pending transaction"""
         result = []
+        if not transaction_ids:
+            raise commands.BadArgument('Please specify at least one transaction id')
         for transaction_id in transaction_ids:
-            transaction = self.TransactionDB.query_one(id=transaction_id)
-            if not transaction:
-                continue
-            if transaction.confirmed:
-                result.append(f'{transaction_id} was already confirmed')
-                continue
-            transaction.confirmed = True
-            result.append(f'{transaction_id} confirmed')
+            result.append(await self.confirm_transaction(transaction_id))
         await ctx.send('```\n' + '\n'.join(result) + '```')
 
     @bank.command(
@@ -314,7 +324,7 @@ class Bank(commands.Cog, name='Bank'):
             description=description,
             sender_id=character.id,
             receiver_id=character.id,
-            confirm=False
+            confirm=True
         )
         e = Embed(
             title=f'Transaction added to account of {character.name}',
@@ -332,6 +342,26 @@ class Bank(commands.Cog, name='Bank'):
         if not character:
             raise commands.BadArgument('No active character found')
         await self.print_log(ctx, character.id)
+
+    @account.command(
+        name='delete',
+        aliases=['remove']
+    )
+    async def account_delete(self, ctx, transaction_id):
+        """Delete one of your own deposit/withdraw transactions"""
+        character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
+        if not character:
+            raise commands.BadArgument('No active character found')
+
+        transaction = self.TransactionDB.query_one(id=transaction_id)
+        if not transaction:
+            raise commands.BadArgument('Unknown transaction')
+
+        if not transaction.sender_id == transaction.receiver_id == character.id:
+            raise commands.BadArgument('This is not a deposit/withdraw transaction of your current character')
+
+        status = await transaction.delete()
+        await ctx.send(f'Success - {status} transaction deleted.')
 
     @account.command(
         name='send',
