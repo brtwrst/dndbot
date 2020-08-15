@@ -70,6 +70,7 @@ for extension in reversed(STARTUP_EXTENSIONS):
         exc = f'{type(e).__name__}: {e}'
         print(f'Failed to load extension {extension}\n{exc}')
 
+
 @client.event
 async def on_ready():
     print('\nActive in these guilds/servers:')
