@@ -37,10 +37,10 @@ class Bank(commands.Cog, name='Bank'):
 
     def get_balance(self, account):
         coins = {c: 0 for c in CURRENCIES}
-        for transaction in self.TransactionDB.query_all(
-            receiver_id=account,
-            confirmed=True
-        ):
+        transactions = self.TransactionDB.query_all(receiver_id=account, confirmed=True)
+        if not transactions:
+            raise commands.BadArgument('There are no Transactions on this account yet')
+        for transaction in transactions:
             for c in CURRENCIES:
                 coins[c] += getattr(transaction, c) or 0
         return coins
@@ -358,7 +358,9 @@ class Bank(commands.Cog, name='Bank'):
             raise commands.BadArgument('Unknown transaction')
 
         if not transaction.sender_id == transaction.receiver_id == character.id:
-            raise commands.BadArgument('This is not a deposit/withdraw transaction of your current character')
+            raise commands.BadArgument(
+                'This is not a deposit/withdraw transaction of your current character'
+            )
 
         status = await transaction.delete()
         await ctx.send(f'Success - {status} transaction deleted.')
