@@ -11,6 +11,8 @@ Commands:
 import json
 import traceback
 import typing
+import subprocess
+import re
 from datetime import datetime
 from os import path, listdir
 from discord import Embed, DMChannel
@@ -342,6 +344,28 @@ class Management(commands.Cog, name='Management'):
     async def stop_bot(self, ctx):
         """Stop and restart the bot"""
         await self.client.close()
+
+    # ----------------------------------------------
+    # Command to pull the latest changes from github
+    # ----------------------------------------------
+    @commands.command(
+        name='gitpull',
+    )
+    async def git_pull(self, ctx):
+        """Pull the latest changes from github"""
+        await ctx.trigger_typing()
+        try:
+            output = subprocess.check_output(
+                ['git', 'pull']).decode()
+            await ctx.send('```git\n' + output + '\n```')
+        except Exception as e:
+            return await ctx.send(str(e))
+        cog_re = re.compile(r'\s*src\/cogs\/(.+)\.py\s*\|\s*\d+\s*[+-]+')
+        _cogs = [f'cogs.{i}' for i in cog_re.findall(output)]
+        active_cogs = [i for i in _cogs if i in self.client.extensions]
+        if active_cogs:
+            for cog_name in active_cogs:
+                await ctx.invoke(self.client.get_command('reload'), cog_name)
 
 
 def setup(client):
