@@ -36,6 +36,7 @@ class Bank(commands.Cog, name='Bank'):
         return commands.check(predicate)
 
     def get_balance(self, account):
+        """Get the balance of an account as a dict of currencies"""
         coins = {c: 0 for c in CURRENCIES}
         transactions = self.TransactionDB.query_all(receiver_id=account, confirmed=True)
         if not transactions:
@@ -46,6 +47,7 @@ class Bank(commands.Cog, name='Bank'):
         return coins
 
     async def print_balance(self, ctx, account):
+        """Show the balance of an account"""
         coins = self.get_balance(account)
         e = Embed()
         coins_string = [f'{v} {self.emoji[k]}' for k, v in coins.items()]
@@ -53,6 +55,7 @@ class Bank(commands.Cog, name='Bank'):
         await ctx.send(embed=e)
 
     def format_transaction(self, transaction):
+        """Format a Transaction for being displayed as an embed field"""
         coins = {
             c: getattr(transaction, c) if getattr(transaction, c) else 0 for c in CURRENCIES
         }
@@ -78,6 +81,9 @@ class Bank(commands.Cog, name='Bank'):
     async def create_transaction(
         self, user_id, transaction_string, description, sender_id, receiver_id, confirm
     ):
+        """Create a transaction (if money was sent create another one in the target account)
+
+        If there is not enough money in either account -> tevert transactions and raise error"""
         if not description or not transaction_string:
             raise commands.BadArgument('Please provide a transaction string and a description')
 
@@ -111,6 +117,11 @@ class Bank(commands.Cog, name='Bank'):
             currency = CURRENCIES[CURRENCIES_SHORT.index(currency)]
             setattr(transaction, currency, amount)
 
+        receiver_balance = self.get_balance(receiver_id)
+        if any(amount<0 for amount in receiver_balance.values()):
+            await transaction.delete()
+            raise commands.BadArgument('Not enough money in account')
+
         if sender_id != receiver_id:
             transaction2 = self.TransactionDB.create_new(
                 date=datetime.now(tz=timezone.utc).isoformat(),
@@ -133,11 +144,17 @@ class Bank(commands.Cog, name='Bank'):
 
             transaction.linked = transaction2.id
 
+        seender_balance = self.get_balance(receiver_id)
+        if any(amount<0 for amount in seender_balance.values()):
+            await transaction.delete()
+            raise commands.BadArgument('Not enough money in account')
+
         return transaction
 
-    async def print_log(self, ctx, receiver_id):
+    async def print_log(self, ctx, account):
+        """Print the log for an account to a ctx"""
         e = Embed(title='Transaction Log')
-        transactions = self.TransactionDB.get_history_for_account(receiver_id=receiver_id)
+        transactions = self.TransactionDB.get_history_for_account(receiver_id=account)
         if not transactions:
             raise commands.BadArgument('No Transactions')
         for transaction in transactions:
@@ -146,6 +163,7 @@ class Bank(commands.Cog, name='Bank'):
         await ctx.send(embed=e)
 
     async def print_pending(self, ctx):
+        """Print all pending transactions to a ctx"""
         e = Embed(title='Pending Transactions')
         transactions = self.TransactionDB.query_all(confirmed=0)
         if not transactions:
@@ -156,6 +174,7 @@ class Bank(commands.Cog, name='Bank'):
         await ctx.send(embed=e)
 
     async def confirm_transaction(self, transaction_id, check_linked=True):
+        """Confirm a transaction (if money was sent confirm another one in the target account)"""
         res = ''
         transaction = self.TransactionDB.query_one(id=transaction_id)
         if not transaction:
