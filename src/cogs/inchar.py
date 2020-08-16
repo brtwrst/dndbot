@@ -72,6 +72,14 @@ class InChar(commands.Cog, name='InCharacter'):
         aliases=['update']
     )
     async def char_edit(self, ctx, char_name: str, attribute: str, *, value):
+        """Edit one of the characters attributes
+
+        Example:
+        `+char edit [character_name] name "marceldavis"`
+        `+char edit [character_name] display_name "Marcel Davis"`
+        `+char edit [character_name] npc_status 1`
+        `+char edit [character_name] picture_url "https://marcel.davis/pic.png"`
+        """
         if attribute.lower() in ('_id', 'rank'):
             return
         value = value.replace('`', '')
@@ -101,7 +109,7 @@ class InChar(commands.Cog, name='InCharacter'):
     )
     @is_admin()
     async def admin_show_chars(self, ctx, target_user: Member):
-        """Show all your characters"""
+        """Admin command to show all characters of a target user"""
         user_id = target_user.id
         chars = self.CharacterDB.query_all(user_id=user_id)
         if not chars:
@@ -134,9 +142,10 @@ class InChar(commands.Cog, name='InCharacter'):
         await ctx.send(embed=e)
 
     @char_base.command(
-        name='show',
+        name='info',
+        aliases=['show'],
     )
-    async def show(self, ctx, charname=None):
+    async def char_info(self, ctx, charname=None):
         """Show the attributes of a character"""
         user_id = ctx.author.id
         if charname is None:
@@ -226,6 +235,7 @@ class InChar(commands.Cog, name='InCharacter'):
     )
     @is_admin()
     async def set_base(self, ctx):
+        """Admin commands to set character rank and level"""
         pass
 
     @set_base.command(
