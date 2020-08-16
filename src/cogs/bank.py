@@ -67,7 +67,7 @@ class Bank(commands.Cog, name='Bank'):
         description = transaction.description
         transaction_id = transaction.id
         confirmed = transaction.confirmed
-        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {date}'  # - {user_str}'
+        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {description}'  # - {user_str}'
         body = [f'**{coins[c]}** {self.emoji[c]} ' if coins[c] else '' for c in CURRENCIES]
         receiver = self.CharacterDB.query_one(id=transaction.receiver_id)
         if transaction.sender_id == transaction.receiver_id:
@@ -76,7 +76,7 @@ class Bank(commands.Cog, name='Bank'):
             sender = self.CharacterDB.query_one(id=transaction.sender_id)
             body.append(f'\nVon: {sender.display_name}')
             body.append(f'\nAn: {receiver.display_name}')
-        body.append(f'\nZweck: {description}')
+        body.append(f'\n{date}')
 
         return (title, ''.join(body))
 
