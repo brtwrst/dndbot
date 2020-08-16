@@ -115,8 +115,8 @@ class InChar(commands.Cog, name='InCharacter'):
         if not chars:
             raise commands.BadArgument('No characters found')
 
-        to_print = '\n'.join(char.display_name + ' -> ' + char.name for char in chars)
-        e = Embed(description='**Display Name -> name**\n\n' + to_print)
+        to_print = '\n'.join(f'{char.display_name} -> {char.name} ({char.id})' for char in chars)
+        e = Embed(description='**Display Name -> name (id)**\n\n' + to_print)
         await ctx.send(embed=e)
 
     @char_base.command(
