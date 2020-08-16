@@ -161,7 +161,7 @@ class Bank(commands.Cog, name='Bank'):
             raise commands.BadArgument('No Transactions')
         for transaction in transactions:
             title, body = self.format_transaction(transaction)
-            e.add_field(inline=False, name=title, value=body)
+            e.add_field(inline=True, name=title, value=body)
         await ctx.send(embed=e)
 
     async def print_pending(self, ctx):

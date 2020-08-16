@@ -7,7 +7,7 @@ class TransactionDB(BaseDB):
     def __init__(self, client):
         super().__init__(client, model_class=Transaction)
 
-    def get_history_for_account(self, receiver_id, num=10, start=0):
+    def get_history_for_account(self, receiver_id, num=12, start=0):
         with self.client.state.get_session() as session:
             try:
                 data = (
@@ -22,7 +22,7 @@ class TransactionDB(BaseDB):
         if len(data) == 0:
             return None
         else:
-            return reversed(tuple(self.model_class(self.client, d) for d in data))
+            return tuple(self.model_class(self.client, d) for d in data)
 
     def create_new(self, date, user_id, receiver_id, sender_id, description=None, confirmed=0, platinum=None, electrum=None, gold=None, silver=None, copper=None, linked=None):
         data = TransactionData(
