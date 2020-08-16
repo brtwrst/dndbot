@@ -360,8 +360,8 @@ class Bank(commands.Cog, name='Bank'):
         """Add a transaction to your account `+help account add`
 
         The transaction_string is a comma separated list of amount and currency pairs.
-        example `+bank 2g,5s Pay for last mission`
-        example `+bank -2g,-5s Bought food for the kitchen`
+        example `+account 2g,5s Pay for last mission`
+        example `+account -2g,-5s Bought food for the kitchen`
         """
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
