@@ -36,6 +36,8 @@ class Blackwing(Bot):
             content = origin.message.content
         elif isinstance(origin, Message):
             content = origin.content
+        else:
+            content = None
         self.last_errors.append((error, datetime.utcnow(), origin, content))
         await client.change_presence(activity=self.error_activity)
 

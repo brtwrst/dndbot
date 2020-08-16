@@ -125,7 +125,7 @@ class Management(commands.Cog, name='Management'):
         try:
             self.client.load_extension(target_extension)
         except Exception as e:
-            self.client.last_errors.append((e, datetime.utcnow(), ctx))
+            await self.client.log_error(e, None)
             await ctx.send(f'```py\n{type(e).__name__}: {str(e)}\n```')
             return
         await ctx.send(f'```css\nExtension [{target_extension}] loaded.```')
@@ -181,7 +181,7 @@ class Management(commands.Cog, name='Management'):
                 self.client.reload_extension(ext)
                 result.append(f'Extension [{ext}] reloaded.')
             except Exception as e:
-                self.client.last_errors.append((e, datetime.utcnow(), ctx))
+                await self.client.log_error(e, None)
                 result.append(f'#ERROR loading [{ext}]')
                 continue
         result = '\n'.join(result)
