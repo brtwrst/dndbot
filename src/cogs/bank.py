@@ -80,6 +80,27 @@ class Bank(commands.Cog, name='Bank'):
 
         return (title, ''.join(body))
 
+    def parse_transaction_string(self, transaction_string):
+        """Parse a transaction string and return a dict of coins"""
+        for c in transaction_string:
+            if (c not in ',+-1234567890') and (c not in CURRENCIES_SHORT):
+                raise commands.BadArgument('Invalid character in transaction ' + c)
+
+        split = transaction_string.split(',')
+
+        coins = dict()
+
+        for coinstring in split:
+            amount = int(coinstring[:-1])
+            currency = coinstring[-1:]
+            if currency not in CURRENCIES_SHORT:
+                raise commands.BadArgument('Invalid currency detected:' + currency)
+
+            currency = CURRENCIES[CURRENCIES_SHORT.index(currency)]
+            coins[currency] = amount
+
+        return coins
+
     async def create_transaction(
         self, user_id, transaction_string, description, sender_id, receiver_id, confirm
     ):
@@ -89,9 +110,7 @@ class Bank(commands.Cog, name='Bank'):
         if not description or not transaction_string:
             raise commands.BadArgument('Please provide a transaction string and a description')
 
-        for c in transaction_string:
-            if (c not in ',+-1234567890') and (c not in CURRENCIES_SHORT):
-                raise commands.BadArgument('Invalid character in transaction ' + c)
+        coins = self.parse_transaction_string(transaction_string)
 
         transaction = self.TransactionDB.create_new(
             date=datetime.now(tz=timezone.utc).isoformat(),
@@ -108,15 +127,7 @@ class Bank(commands.Cog, name='Bank'):
             linked=None
         )
 
-        split = transaction_string.split(',')
-
-        for coinstring in split:
-            amount = int(coinstring[:-1])
-            currency = coinstring[-1:]
-            if currency not in CURRENCIES_SHORT:
-                raise commands.BadArgument('Invalid currency detected:' + currency)
-
-            currency = CURRENCIES[CURRENCIES_SHORT.index(currency)]
+        for currency, amount in coins.items():
             setattr(transaction, currency, amount)
 
         receiver_balance = self.get_balance(receiver_id)
@@ -139,10 +150,8 @@ class Bank(commands.Cog, name='Bank'):
                 copper=None,
                 linked=transaction.id,
             )
-            for currency in CURRENCIES:
-                amount = getattr(transaction, currency)
-                if amount:
-                    setattr(transaction2, currency, amount*-1)
+            for currency, amount in coins.items():
+                setattr(transaction2, currency, amount*-1)
 
             transaction.linked = transaction2.id
 
