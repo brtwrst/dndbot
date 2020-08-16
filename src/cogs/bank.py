@@ -197,7 +197,7 @@ class Bank(commands.Cog, name='Bank'):
     @is_admin()
     async def bank(self, ctx):
         """View and control the bank account `+help bank`"""
-        await self.print_balance(ctx, 0)
+        await self.print_balance(ctx, account=1)
 
     @bank.command(
         name='add',
@@ -214,8 +214,8 @@ class Bank(commands.Cog, name='Bank'):
             user_id=ctx.author.id,
             transaction_string=transaction_string,
             description=description,
-            sender_id=0,
-            receiver_id=0,
+            sender_id=1,
+            receiver_id=1,
             confirm=True
         )
         e = Embed(
@@ -303,7 +303,7 @@ class Bank(commands.Cog, name='Bank'):
             user_id=ctx.author.id,
             transaction_string=transaction_string,
             description=description,
-            sender_id=0,
+            sender_id=1,
             receiver_id=receiver.id,
             confirm=True
         )
