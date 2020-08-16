@@ -8,6 +8,7 @@ from discord.utils import get
 from discord import Embed, Member
 from .models.transaction_model import TransactionDB
 from .models.character_model import CharacterDB
+from .models.user_model import UserDB
 
 CURRENCIES = ('platinum', 'gold', 'electrum', 'silver', 'copper')
 CURRENCIES_SHORT = tuple(s[0] for s in CURRENCIES)
@@ -23,6 +24,7 @@ class Bank(commands.Cog, name='Bank'):
             self.emoji = None
         self.TransactionDB = TransactionDB(client)
         self.CharacterDB = CharacterDB(client)
+        self.UserDB = UserDB(client)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -118,7 +120,7 @@ class Bank(commands.Cog, name='Bank'):
             setattr(transaction, currency, amount)
 
         receiver_balance = self.get_balance(receiver_id)
-        if any(amount<0 for amount in receiver_balance.values()):
+        if any(amount < 0 for amount in receiver_balance.values()):
             await transaction.delete()
             raise commands.BadArgument('Not enough money in account')
 
@@ -145,7 +147,7 @@ class Bank(commands.Cog, name='Bank'):
             transaction.linked = transaction2.id
 
         seender_balance = self.get_balance(receiver_id)
-        if any(amount<0 for amount in seender_balance.values()):
+        if any(amount < 0 for amount in seender_balance.values()):
             await transaction.delete()
             raise commands.BadArgument('Not enough money in account')
 
@@ -309,6 +311,25 @@ class Bank(commands.Cog, name='Bank'):
             title=f'Transaction added from Bank to {receiver.name}',
             description='\n'.join(self.format_transaction(transaction))
         )
+        await ctx.send(embed=e)
+
+    @bank.command(
+        name='accounts',
+    )
+    @is_admin()
+    async def bank_show_accounts(self, ctx):
+        """Show all account holders (characters that are not NPCs)"""
+        e = Embed(title='Accounts')
+        users = self.UserDB.query_all()
+        for user in users:
+            member = self.client.get_user(user.id)
+            username = member.display_name if member else 'Unknown'
+            chars = self.CharacterDB.query_all(user_id=user.id)
+            c_list = [
+                f'{char.id}: {char.display_name} ({char.name})' for char in chars if not char.npc_status]
+            if c_list:
+                e.add_field(name=username, value='\n'.join(c_list), inline=True)
+
         await ctx.send(embed=e)
 
     @commands.group(
