@@ -79,6 +79,7 @@ class InChar(commands.Cog, name='InCharacter'):
         `+char edit [character_name] display_name "Marcel Davis"`
         `+char edit [character_name] npc_status 1`
         `+char edit [character_name] picture_url "https://marcel.davis/pic.png"`
+        `+char edit [character_name] level "1"`
         """
         if attribute.lower() in ('_id', 'rank'):
             return
@@ -93,6 +94,7 @@ class InChar(commands.Cog, name='InCharacter'):
         name='delete',
         aliases=['del', 'remove'],
     )
+    @is_admin()
     async def delete(self, ctx, charname):
         """Remove a character"""
         char = self.CharacterDB.query_one(user_id=ctx.author.id, name=charname)
@@ -242,27 +244,33 @@ class InChar(commands.Cog, name='InCharacter'):
         name='rank',
     )
     @is_admin()
-    async def setrank(self, ctx, target_user: Member, charname: str, rank: Role = None):
-        """Override a characters rank"""
-        char = self.CharacterDB.query_one(user_id=target_user.id, name=charname)
-        if not char:
-            raise commands.BadArgument(f'Character not found')
-
-        char.rank = rank.id
-        await ctx.send(f'Rank override saved')
+    async def set_rank(self, ctx, char_ids: commands.Greedy[int], rank: Role = None):
+        """Set the rank of a list of characters"""
+        res = []
+        for char_id in char_ids:
+            char = self.CharacterDB.query_one(id=char_id)
+            if not char:
+                res.append(f'Character {char_id} not found')
+                continue
+            char.rank = rank.id
+            res.append(f'Rank of character {char_id} set to {rank.name}')
+        await ctx.send('```\n' + '\n'.join(res) + '\n```')
 
     @set_base.command(
-        name='level',
+        name='npc',
     )
     @is_admin()
-    async def setlevel(self, ctx, target_user: Member, charname: str, level: int):
-        """Override a characters level"""
-        char = self.CharacterDB.query_one(user_id=target_user.id, name=charname)
-        if not char:
-            raise commands.BadArgument(f'Character not found')
-
-        char.level = level
-        await ctx.send(f'Level set to {level}')
+    async def set_npc(self, ctx, char_ids: commands.Greedy[int], npc_status: bool):
+        """Set the npc_status of a list of characters"""
+        res = []
+        for char_id in char_ids:
+            char = self.CharacterDB.query_one(id=char_id)
+            if not char:
+                res.append(f'Character {char_id} not found')
+                continue
+            char.npc_status = npc_status
+            res.append(f'NPC status of character {char_id} set to {npc_status}')
+        await ctx.send('```\n' + '\n'.join(res) + '\n```')
 
 
 def setup(client):
