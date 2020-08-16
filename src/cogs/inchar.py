@@ -87,6 +87,8 @@ class InChar(commands.Cog, name='InCharacter'):
         if value.isdigit():
             value = int(value)
         char = self.CharacterDB.query_one(user_id=ctx.author.id, name=char_name)
+        if not char:
+            raise commands.BadArgument(f'No Character with name {char_name} found')
         await char.edit(attribute, value)
         await ctx.send('Character updated')
 
@@ -161,18 +163,22 @@ class InChar(commands.Cog, name='InCharacter'):
         if not char:
             raise commands.BadArgument(f'No character with name {charname} found')
 
-        to_print = []
-        to_print.append(f'Character Information:')
-        to_print.append(f'**name:** `{char.name}`')
-        to_print.append(f'**display_name:** `{char.display_name}`')
-        to_print.append(f'**picture_url:** `{char.picture_url}`')
-        to_print.append(f'**npc_status:** `{int(char.npc_status)}`')
         char_rank = self.client.mainguild.get_role(char.rank)
-        to_print.append(f'**rank:** `{char_rank.mention if char_rank else None}`')
-        to_print.append(f'**level:** `{char.level}`')
-        to_print.append(f'**AccountNumber:** `{char.id}`')
 
-        await ctx.send('\n'.join(to_print))
+        e = Embed(
+            title='Character Information:',
+            description=f'Use `+char edit {char.name}` to change an attribute'
+        )
+
+        e.add_field(name='name', value=char.name, inline=True)
+        e.add_field(name='display_name', value=char.display_name, inline=True)
+        e.add_field(name='npc_status', value=int(char.npc_status), inline=True)
+        e.add_field(name='rank', value=char_rank.name if char_rank else None, inline=True)
+        e.add_field(name='level', value=char.level, inline=True)
+        e.add_field(name='AccountNumber', value=char.id, inline=True)
+        e.set_thumbnail(url=char.picture_url)
+
+        await ctx.send(embed=e)
 
     @commands.command(
         name='write',
