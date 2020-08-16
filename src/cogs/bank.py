@@ -237,7 +237,7 @@ class Bank(commands.Cog, name='Bank'):
                 character = self.CharacterDB.query_one(user_id=user.id, name=character_name)
             else:
                 character = self.CharacterDB.query_active_char(user_id=user.id)
-        await self.print_log(ctx, character.id if character else 0)
+        await self.print_log(ctx, character.id if character else 1)
 
     @bank.command(
         name='delete',
@@ -292,7 +292,7 @@ class Bank(commands.Cog, name='Bank'):
         self, ctx, receiver_account_nr: int, transaction_string=None, *, description=None
     ):
         """Send Money to another account"""
-        if receiver_account_nr == 0:
+        if receiver_account_nr == 1:
             raise commands.BadArgument('You cannot send money to yourself')
 
         receiver = self.CharacterDB.query_one(id=receiver_account_nr)
