@@ -232,6 +232,7 @@ class Bank(commands.Cog, name='Bank'):
             description='\n'.join(self.format_transaction(transaction))
         )
         await ctx.send(embed=e)
+        await self.print_log(ctx, 1)
 
     @bank.command(
         name='history',
@@ -380,6 +381,7 @@ class Bank(commands.Cog, name='Bank'):
             description='\n'.join(self.format_transaction(transaction))
         )
         await ctx.send(embed=e)
+        await self.print_log(ctx, character.id)
 
     @account.command(
         name='history',
