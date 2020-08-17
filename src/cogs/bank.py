@@ -254,13 +254,16 @@ class Bank(commands.Cog, name='Bank'):
         aliases=['remove']
     )
     @is_admin()
-    async def bank_delete(self, ctx, transaction_id):
-        """Delete a transaction"""
-        transaction = self.TransactionDB.query_one(id=transaction_id)
-        if not transaction:
-            raise commands.BadArgument('Unknown transaction')
-        status = await transaction.delete()
-        await ctx.send(f'Success - {status} transactions deleted.')
+    async def bank_delete(self, ctx, transaction_ids: commands.Greedy[int]):
+        """Delete transactions"""
+        res = []
+        for transaction_id in transaction_ids:
+            transaction = self.TransactionDB.query_one(id=transaction_id)
+            if not transaction:
+                res.append(f'{transaction_id}: Unknown transaction')
+            status = await transaction.delete()
+            res.append(f'{transaction_id}:Success - {status} transactions deleted.')
+        await ctx.send('```\n' + '\n'.join(res) + '\n```')
 
     @bank.command(
         name='pending',
@@ -398,23 +401,25 @@ class Bank(commands.Cog, name='Bank'):
         name='delete',
         aliases=['remove']
     )
-    async def account_delete(self, ctx, transaction_id):
+    async def account_delete(self, ctx, transaction_ids: commands.Greedy[int]):
         """Delete one of your own deposit/withdraw transactions"""
         character = self.CharacterDB.query_active_char(user_id=ctx.author.id)
         if not character:
             raise commands.BadArgument('No active character found')
 
-        transaction = self.TransactionDB.query_one(id=transaction_id)
-        if not transaction:
-            raise commands.BadArgument('Unknown transaction')
+        res = []
+        for transaction_id in transaction_ids:
+            transaction = self.TransactionDB.query_one(id=transaction_id)
+            if not transaction:
+                res.append(f'{transaction_id}:Unknown transaction')
 
-        if not transaction.sender_id == transaction.receiver_id == character.id:
-            raise commands.BadArgument(
-                'This is not a deposit/withdraw transaction of your current character'
-            )
+            if not transaction.sender_id == transaction.receiver_id == character.id:
+                res.append(f'{transaction_id}: This is not a deposit/withdraw of your character')
 
-        status = await transaction.delete()
-        await ctx.send(f'Success - {status} transaction deleted.')
+            status = await transaction.delete()
+            res.append(f'{transaction_id}: Success - {status} transaction deleted.')
+
+        await ctx.send('```\n' + '\n'.join(res) + '\n```')
 
     @account.command(
         name='send',
