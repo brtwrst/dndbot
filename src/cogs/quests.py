@@ -33,7 +33,7 @@ class QuestController(commands.Cog, name='QuestController'):
     )
     async def quest_add(
         self, ctx,
-        _id: int,
+        quest_id: int,
         date: str,
         multi: str,
         tier: int,
@@ -46,7 +46,7 @@ class QuestController(commands.Cog, name='QuestController'):
         """Add a quest"""
         try:
             quest = self.QuestDB.create_new(
-                _id=_id,
+                id=quest_id,
                 date=date,
                 multi=multi,
                 tier=tier,
