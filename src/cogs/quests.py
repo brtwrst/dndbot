@@ -46,7 +46,7 @@ class QuestController(commands.Cog, name='QuestController'):
         """Add a quest"""
         try:
             quest = self.QuestDB.create_new(
-                id=quest_id,
+                quest_id=quest_id,
                 date=date,
                 multi=multi,
                 tier=tier,
