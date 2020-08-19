@@ -205,9 +205,9 @@ class Bank(commands.Cog, name='Bank'):
         invoke_without_command=True,
     )
     @is_admin()
-    async def bank(self, ctx):
+    async def bank(self, ctx, account: int = 1):
         """View and control the bank account `+help bank`"""
-        await self.print_balance(ctx, account=1)
+        await self.print_balance(ctx, account=account)
 
     @bank.command(
         name='add',
