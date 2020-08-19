@@ -116,10 +116,10 @@ class EmbedController(commands.Cog, name='EmbedController'):
         name='show_content',
         aliases=['print_content']
     )
-    async def embed_print(self, ctx, _id: int):
+    async def embed_print(self, ctx, embed_id: int):
         """Print the embeds content JSON Object"""
         try:
-            embed = self.EmbedDB.query_one(id=_id)
+            embed = self.EmbedDB.query_one(id=embed_id)
 
             if not embed:
                 await ctx.send('Embed ID not found in Database')

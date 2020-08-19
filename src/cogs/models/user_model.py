@@ -16,13 +16,13 @@ class UserDB(BaseDB):
 
         return self.model_class(self.client, data)
 
-    def create_new(self, _id, active_char=None):
+    def create_new(self, user_id, active_char=None):
         with self.client.state.get_session() as session:
-            if session.query(UserData).filter_by(id=_id).count() > 0:
-                raise DBError(f'User {_id} already exists')
+            if session.query(UserData).filter_by(id=user_id).count() > 0:
+                raise DBError(f'User {user_id} already exists')
 
         data = UserData(
-            _id=_id,
+            id=user_id,
             active_char=active_char,
         )
         with self.client.state.get_session() as session:

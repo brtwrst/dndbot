@@ -8,13 +8,13 @@ class QuestDB(BaseDB):
     def __init__(self, client):
         super().__init__(client, model_class=Quest)
 
-    def create_new(self, _id, date, multi, tier, rank_id, reward, title, description):
+    def create_new(self, quest_id, date, multi, tier, rank_id, reward, title, description):
         with self.client.state.get_session() as session:
-            if session.query(self.table_class).filter_by(id=_id).count() > 0:
-                raise DBError(f'Quest {_id} already exists')
+            if session.query(self.table_class).filter_by(id=quest_id).count() > 0:
+                raise DBError(f'Quest {quest_id} already exists')
 
         data = QuestData(
-            _id=_id,
+            id=quest_id,
             embed_id=None,
             date=date,
             multi=multi,
