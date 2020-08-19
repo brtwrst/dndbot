@@ -51,9 +51,10 @@ class Bank(commands.Cog, name='Bank'):
     async def print_balance(self, ctx, account):
         """Show the balance of an account"""
         coins = self.get_balance(account)
+        char = self.CharacterDB.query_one(id=account)
         e = Embed()
         coins_string = [f'{v} {self.emoji[k]}' for k, v in coins.items()]
-        e.add_field(name='Your Balance', value=' | '.join(coins_string))
+        e.add_field(name=f'Balance ({char.name}):', value=' | '.join(coins_string))
         await ctx.send(embed=e)
 
     def format_transaction(self, transaction):
