@@ -67,7 +67,8 @@ class Bank(commands.Cog, name='Bank'):
         description = transaction.description
         transaction_id = transaction.id
         confirmed = transaction.confirmed
-        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {description}'  # - {user_str}'
+        # - {user_str}'
+        title = f'{"(Pending) " * (not confirmed)}ID:{transaction_id} | {description}'
         body = [f'**{coins[c]}** {self.emoji[c]} ' if coins[c] else '' for c in CURRENCIES]
         receiver = self.CharacterDB.query_one(id=transaction.receiver_id)
         if transaction.sender_id == transaction.receiver_id:
@@ -167,7 +168,7 @@ class Bank(commands.Cog, name='Bank'):
         e = Embed(title='Transaction Log')
         transactions = self.TransactionDB.get_history_for_account(receiver_id=account)
         if not transactions:
-            raise commands.BadArgument('No Transactions')
+            raise commands.BadArgument(f'No Transactions for Account #{account}')
         for transaction in transactions:
             title, body = self.format_transaction(transaction)
             e.add_field(inline=True, name=title, value=body)
@@ -239,15 +240,9 @@ class Bank(commands.Cog, name='Bank'):
         aliases=['log'],
     )
     @is_admin()
-    async def bank_history(self, ctx, user: Member = None, character_name=None):
+    async def bank_history(self, ctx, account: int = 1):
         """View the bank transaction history"""
-        character = None
-        if user:
-            if character_name:
-                character = self.CharacterDB.query_one(user_id=user.id, name=character_name)
-            else:
-                character = self.CharacterDB.query_active_char(user_id=user.id)
-        await self.print_log(ctx, character.id if character else 1)
+        await self.print_log(ctx, account)
 
     @bank.command(
         name='delete',
