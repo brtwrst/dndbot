@@ -7,12 +7,14 @@ class TransactionDB(BaseDB):
     def __init__(self, client):
         super().__init__(client, model_class=Transaction)
 
-    def get_history_for_account(self, receiver_id, num=12, start=0):
+    def get_history_for_account(self, receiver_id, num=12, start=0, search_string=None):
+        search_string = f'%{search_string}%' if search_string else '%'
         with self.client.state.get_session() as session:
             try:
                 data = (
                     session.query(TransactionData)
                     .filter_by(receiver_id=receiver_id)
+                    .filter(self.table_class.description.like(search_string))
                     .order_by(TransactionData.id.desc())
                     .limit(num+start)
                     .all()[start:num+start]

@@ -2,10 +2,11 @@
 It will add commands to manage a guild bank.
 """
 # pylint: disable=E0402, E0211
+import typing
 from datetime import datetime, timezone
 from discord.ext import commands
 from discord.utils import get
-from discord import Embed, Member
+from discord import Embed
 from .models.transaction_model import TransactionDB
 from .models.character_model import CharacterDB
 from .models.user_model import UserDB
@@ -164,10 +165,13 @@ class Bank(commands.Cog, name='Bank'):
 
         return transaction
 
-    async def print_log(self, ctx, account):
+    async def print_log(self, ctx, account, search_string=None):
         """Print the log for an account to a ctx"""
         e = Embed(title='Transaction Log')
-        transactions = self.TransactionDB.get_history_for_account(receiver_id=account)
+        transactions = self.TransactionDB.get_history_for_account(
+            receiver_id=account,
+            search_string=search_string
+        )
         if not transactions:
             raise commands.BadArgument(f'No Transactions for Account #{account}')
         for transaction in transactions:
@@ -241,9 +245,9 @@ class Bank(commands.Cog, name='Bank'):
         aliases=['log'],
     )
     @is_admin()
-    async def bank_history(self, ctx, account: int = 1):
+    async def bank_history(self, ctx, account: typing.Optional[int] = 1, *, search_string=None):
         """View the bank transaction history"""
-        await self.print_log(ctx, account)
+        await self.print_log(ctx, account, search_string)
 
     @bank.command(
         name='delete',
