@@ -12,7 +12,7 @@ class UserDB(BaseDB):
             try:
                 data = session.query(self.table_class).filter_by(**query_kwargs).one()
             except NoResultFound:
-                return self.create_new(query_kwargs['_id'])
+                return self.create_new(query_kwargs['id'])
 
         return self.model_class(self.client, data)
 

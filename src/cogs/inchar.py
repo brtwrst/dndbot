@@ -81,7 +81,7 @@ class InChar(commands.Cog, name='InCharacter'):
         `+char edit [character_name] picture_url "https://marcel.davis/pic.png"`
         `+char edit [character_name] level "1"`
         """
-        if attribute.lower() in ('_id', 'rank'):
+        if attribute.lower() in ('id', 'rank'):
             return
         value = value.replace('`', '')
         if value.isdigit():
