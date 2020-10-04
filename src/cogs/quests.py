@@ -67,6 +67,7 @@ class QuestController(commands.Cog, name='QuestController'):
             quest.embed_id = embed.id
         except (DBError, ModelError) as e:
             await ctx.send(e)
+            return
 
         await ctx.send(f'Quest {quest.id} added - Embed ID: {embed.id}')
 
