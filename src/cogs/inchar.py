@@ -243,7 +243,7 @@ class InChar(commands.Cog, name='InCharacter'):
     )
     @is_admin()
     async def set_base(self, ctx):
-        """Admin commands to set character rank and level"""
+        """Admin commands to set character rank and npc status"""
         pass
 
     @set_base.command(

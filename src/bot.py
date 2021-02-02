@@ -10,7 +10,7 @@ from discord.ext.commands import Bot, Context
 from cogs.models.core import DBConnector
 
 
-class Blackwing(Bot):
+class DNDBot(Bot):
     def __init__(self, *args, **options):
         super().__init__(*args, **options)
         self.session = None
@@ -52,9 +52,9 @@ class Blackwing(Bot):
         return any(role in permitted_roles for role in user_roles)
 
 
-client = Blackwing(
+client = DNDBot(
     command_prefix=('+'),
-    description='Hi I am Blackwing!',
+    description='Hi I am DNDBot!',
     max_messages=15000
 )
 
@@ -77,10 +77,10 @@ for extension in reversed(STARTUP_EXTENSIONS):
 async def on_ready():
     print('\nActive in these guilds/servers:')
     [print(g.name) for g in client.guilds]
-    print('Blackwing started successfully')
+    print('DNDBot started successfully')
     client.mainguild = client.get_guild(client.config['mainguild'])
     return True
 
 
 client.run()
-print('Blackwing has exited')
+print('DNDBot has exited')
