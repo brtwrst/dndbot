@@ -93,6 +93,8 @@ class myHelpCommand(HelpCommand):
             'Write a message with another character by writing `++ [name] [your_message]`\n'
             'List all your created character with `+char list`\n'
             'Show a character\'s configuration with `+char info [name]`\n'
+            '(name can be omitted if you have an active char)\n'
+            'Edit a character with `+char edit [name] [attribute] [new_value]`\n'
             'Delete a character by typing `+char delete [name] (careful)`\n'
         )
         await self.send_pages(header=True, footer=True, desc=desc)

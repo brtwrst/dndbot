@@ -363,7 +363,7 @@ class Bank(commands.Cog, name='Bank'):
     async def account_add(self, ctx, transaction_string=None, *, description=None):
         """Add a transaction to your account `+help account add`
 
-        The transaction_string is a comma separated list of amount and currency pairs.
+        The transaction_string is a comma separated list (no spaces) of amount and currency pairs.
         example `+account 2g,5s Pay for last mission`
         example `+account -2g,-5s Bought food for the kitchen`
         """
