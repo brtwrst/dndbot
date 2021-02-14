@@ -338,6 +338,8 @@ class Bank(commands.Cog, name='Bank'):
             member = self.client.get_user(user.id)
             username = member.display_name if member else 'Unknown'
             chars = self.CharacterDB.query_all(user_id=user.id)
+            if not chars:
+                continue
             c_list = [
                 f'{char.id}: {char.display_name} ({char.name})' for char in chars if not char.npc_status]
             if c_list:
