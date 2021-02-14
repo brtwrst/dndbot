@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from os import path, listdir
 from aiohttp import ClientSession
-from discord import Activity, Message
+from discord import Activity, Message, Intents, AllowedMentions
 from discord.ext.commands import Bot, Context
 from cogs.models.core import DBConnector
 
@@ -52,10 +52,15 @@ class DNDBot(Bot):
         return any(role in permitted_roles for role in user_roles)
 
 
+intents = Intents.default()
+intents.members = True
+
 client = DNDBot(
     command_prefix=('+'),
     description='Hi I am DNDBot!',
-    max_messages=15000
+    max_messages=15000,
+    intents=intents,
+    allowed_mentions=AllowedMentions(everyone=False, users=True, roles=True)
 )
 
 STARTUP_EXTENSIONS = []
