@@ -103,7 +103,7 @@ class InChar(commands.Cog, name='InCharacter'):
         if not char:
             raise commands.BadArgument('Character not found')
 
-        if char.delete() == 1:
+        if await char.delete() == 1:
             await ctx.send('Character deleted')
         else:
             raise commands.CommandError('Unexpected number of deleted rows')
