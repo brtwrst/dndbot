@@ -341,7 +341,8 @@ class Bank(commands.Cog, name='Bank'):
             if not chars:
                 continue
             c_list = [
-                f'{char.id}: {char.display_name} ({char.name})' for char in chars if not char.npc_status]
+                f'{char.id}: {char.display_name} ({char.name})' for char in chars if (char.id == 1 or not char.npc_status)
+            ]
             if c_list:
                 e.add_field(name=username, value='\n'.join(c_list), inline=True)
 
