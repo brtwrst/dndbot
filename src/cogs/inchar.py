@@ -49,7 +49,7 @@ class InChar(commands.Cog, name='InCharacter'):
         valid_filetypes = ('.jpg', '.jpeg', '.png')
         parsed = urlparse(pic_url)
         if not parsed.scheme and not parsed.netloc:
-            raise commands.BadArgument('Sorry - invalid picture URL')
+            raise commands.BadArgument('Sorry - >' + pic_url + '< is an invalid picture URL')
         if not any(parsed.path.lower().endswith(filetype) for filetype in valid_filetypes):
             raise commands.BadArgument('Please only use `' + ' '.join(valid_filetypes) + '`')
 
