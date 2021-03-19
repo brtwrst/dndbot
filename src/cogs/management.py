@@ -218,7 +218,7 @@ class Management(commands.Cog, name='Management'):
             await self.print_traceback(ctx, n)
             return
 
-        NUM_ERRORS_PER_PAGE = 15
+        NUM_ERRORS_PER_PAGE = 5
 
         error_log = self.client.last_errors
 
