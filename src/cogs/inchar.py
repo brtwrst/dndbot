@@ -81,9 +81,17 @@ class InChar(commands.Cog, name='InCharacter'):
         `+char edit [character_name] picture_url "https://marcel.davis/pic.png"`
         `+char edit [character_name] level "1"`
         """
+        value = value.replace('`', '')
+        value = value.replace('"', '')
         if attribute.lower() in ('id', 'rank'):
             return
-        value = value.replace('`', '')
+        elif attribute.lower() == 'picture_url':
+            valid_filetypes = ('.jpg', '.jpeg', '.png')
+            parsed = urlparse(value)
+            if not parsed.scheme and not parsed.netloc:
+                raise commands.BadArgument('Sorry - >' + value + '< is an invalid picture URL')
+            if not any(parsed.path.lower().endswith(filetype) for filetype in valid_filetypes):
+                raise commands.BadArgument('Please only use `' + ' '.join(valid_filetypes) + '`')
         if value.isdigit():
             value = int(value)
         char = self.CharacterDB.query_one(user_id=ctx.author.id, name=char_name)
