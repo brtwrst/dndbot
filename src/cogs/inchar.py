@@ -104,7 +104,6 @@ class InChar(commands.Cog, name='InCharacter'):
         name='delete',
         aliases=['del', 'remove'],
     )
-    @is_admin()
     async def delete(self, ctx, charname):
         """Remove a character"""
         char = self.CharacterDB.query_one(user_id=ctx.author.id, name=charname)
