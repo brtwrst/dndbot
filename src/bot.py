@@ -2,7 +2,7 @@
 
 """
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from os import path, listdir
 from aiohttp import ClientSession
 from discord import Activity, Message, Intents, AllowedMentions
@@ -31,14 +31,13 @@ class DNDBot(Bot):
         await self.session.close()
         await super().close()
 
-    async def log_error(self, error, origin):
-        if isinstance(origin, Context):
-            content = origin.message.content
-        elif isinstance(origin, Message):
-            content = origin.content
-        else:
-            content = None
-        self.last_errors.append((error, datetime.utcnow(), origin, content))
+    async def log_error(self, error, error_source=None):
+        self.last_errors.append((
+            error,
+            datetime.now(tz=timezone.utc),
+            error_source,
+            error_source.message.content if isinstance(error_source, Context) else None
+        ))
         await client.change_presence(activity=self.error_activity)
 
     def user_is_admin(self, user):
