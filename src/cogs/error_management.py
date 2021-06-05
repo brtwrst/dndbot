@@ -87,12 +87,17 @@ class ErrorHandler(commands.Cog, name='ErrorHandler'):
             return
 
         if isinstance(error, commands.UnexpectedQuoteError):
-            await ctx.author.send(f'Unexpected quote encountered')
+            await ctx.author.send(f'Unexpected quote encountered ```\n{ctx.message.content}```')
             await self.try_delete(ctx)
             return
 
         if isinstance(error, commands.InvalidEndOfQuotedStringError):
-            await ctx.author.send(f'Invalid character after quote')
+            await ctx.author.send(f'Invalid character after quote ```\n{ctx.message.content}```')
+            await self.try_delete(ctx)
+            return
+
+        if isinstance(error, commands.ExpectedClosingQuoteError):
+            await ctx.author.send(f'Expected Closing Quote ```\n{ctx.message.content}```')
             await self.try_delete(ctx)
             return
 
